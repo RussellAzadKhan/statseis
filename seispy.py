@@ -66,29 +66,29 @@ def magnitude_to_moment(magnitude):
     return moment
 
 
-def string_to_datetime(list_of_datetimes):
+def string_to_datetime(list_of_datetimes, format='%Y-%m-%d %H:%M:%S'):
     """
     Turn datetimes from string into datetime objects
     """
     Datetime = pd.to_datetime(list_of_datetimes,
-                              format = '%Y-%m-%d %H:%M:%S')
+                              format = format)
     return Datetime
 
 
-def string_to_datetime_df(dataframe):
+def string_to_datetime_df(dataframe, format='%Y-%m-%d %H:%M:%S'):
     """
     Find DATETIME column in df and change to datetime objects
     """
     dataframe['DATETIME'] = pd.to_datetime(dataframe['DATETIME'],
-                                           format = '%Y-%m-%d %H:%M:%S')
+                                           format = format)
     
-def string_to_datetime_return(dataframe):
+def string_to_datetime_return(dataframe, format='%Y-%m-%d %H:%M:%S'):
     """
     Find DATETIME column in df and change to datetime objects
     Returns dataframe so function can be mapped
     """
     dataframe['DATETIME'] = pd.to_datetime(dataframe['DATETIME'],
-                                           format = '%Y-%m-%d %H:%M:%S')
+                                           format = format)
     return dataframe
 
 
