@@ -24,6 +24,7 @@ import glob
 from IPython.display import clear_output, Image
 from functools import reduce
 from sklearn import preprocessing
+from pyproj import Transformer
 
 def convert_extent_to_epsg3857(extent):
     transformer = Transformer.from_crs("epsg:4326", "epsg:3857", always_xy=True)
@@ -64,6 +65,8 @@ def magnitude_to_moment(magnitude):
     """
     moment = 10**(1.5*magnitude+9.05)
     return moment
+
+def str_to_dt(dataframe, forma=format='%Y-%m-%d %H:%M:%S.%f')
 
 
 def string_to_datetime(list_of_datetimes, format='%Y-%m-%d %H:%M:%S'):
