@@ -66,7 +66,8 @@ def magnitude_to_moment(magnitude):
     moment = 10**(1.5*magnitude+9.05)
     return moment
 
-def str_to_dt(dataframe, forma=format='%Y-%m-%d %H:%M:%S.%f')
+# def str_to_dt(dataframe, format='%Y-%m-%d %H:%M:%S.%f'):
+
 
 
 def string_to_datetime(list_of_datetimes, format='%Y-%m-%d %H:%M:%S'):
