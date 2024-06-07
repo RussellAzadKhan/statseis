@@ -1,7 +1,4 @@
-"""
-Module with functions to anaylse seismicity
-"""
-
+# Module with functions to anaylse seismicity
 import datetime as dt
 import math
 import random
@@ -279,8 +276,8 @@ def b_val_max_likelihood(mag, mc, mbin=0.1):
     shibolt_unc = 2.3 * b**2 * math.sqrt(sum((mag_above_mc - mbar)**2) / (n * (n-1))) # Uncertainty estimate from Eq 4
 #     return a, b, aki_unc, shibolt_unc # Return b-value and estimates of uncertainty
     return b
- 
-def Mc_by_maximum_curvature(mag, mbin=0.1):
+
+def Mc_by_maximum_curvature(mag, mbin=0.1, correction=0.2):
     """
     This code returns the magnitude of completeness estimates using the maximum curvature method. It takes a magnitude
     array (mag) and binning (mbin). [Wiemer & Wyss (2000), Lapins, CORSSA] - modified
@@ -288,7 +285,7 @@ def Mc_by_maximum_curvature(mag, mbin=0.1):
     mag = np.array(mag)
     this_fmd = freq_mag_dist(mag, mbin) # uses the fmd distribution (a previous function)
     maxc = this_fmd[0][np.argmax(this_fmd[1])] # Mag bin with highest no. of events
-    return maxc
+    return maxc + correction 
  
  
 def Mc_by_goodness_of_fit(mag, mbin=0.1):
@@ -3062,18 +3059,18 @@ def rand_event_mag(m1=0, m2=5.5):
     m_r = m1 - np.log10(x_r)
     return m_r
 
-def branching_ratio(Q, b, m2, m1):
-    """
-    Shearer 2012. Triggering productivity can be defined in terms of the branching ratio, n, given by equation,
-    which gives the ratio of the average number of first generation aftershocks to the number of background events 
-    (simplified in this case by using an approximation for large m2). This parameter is used by 
-    Helmstetter and Sornette [2003b], Helmstetter et al. [2003], and Sornette and Werner [2005a, 2005b]. 
-    For the G-R magnitude limitsm1 = 0 and m2 = 5.5, following the method described in Shearer [2012]
-    we obtain n = 0.39 in order to satisfy Båth's law [Båth, 1965], the observation that the largest aftershock is, 
-    on average, 1.2 magnitudes smaller than its main shock.
-    """
-    n = Q*b*np.log(10)*(m2-m1)
-    return n
+# def branching_ratio(Q, b, m2, m1):
+#     """
+#     Shearer 2012. Triggering productivity can be defined in terms of the branching ratio, n, given by equation,
+#     which gives the ratio of the average number of first generation aftershocks to the number of background events 
+#     (simplified in this case by using an approximation for large m2). This parameter is used by 
+#     Helmstetter and Sornette [2003b], Helmstetter et al. [2003], and Sornette and Werner [2005a, 2005b]. 
+#     For the G-R magnitude limitsm1 = 0 and m2 = 5.5, following the method described in Shearer [2012]
+#     we obtain n = 0.39 in order to satisfy Båth's law [Båth, 1965], the observation that the largest aftershock is, 
+#     on average, 1.2 magnitudes smaller than its main shock.
+#     """
+#     n = Q*b*np.log(10)*(m2-m1)
+#     return n
     
 def aftershock_rate(t, c=0.001, p=1):
     """
