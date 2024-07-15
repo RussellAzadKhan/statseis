@@ -191,6 +191,7 @@ def haversine_vectorised(lon1, lat1, lon2, lat2):
     """
     Returns the distance (km) from a point to an array of points using the haversine method
     """
+    lon1, lat1 = lon1.iloc[0], lat1.iloc[0]
     lon2, lat2 = np.array(lon2), np.array(lat2)
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
 
@@ -3093,3 +3094,45 @@ def aftershock_distance_decay(r, q):
     """
     D = r**-q
     return D
+
+### Heimisson 2019
+
+def K_t(tau_t, A, sigma_t, tau_0, sigma_0, alpha):
+    """
+    (Heimisson, 2019) Stress history-dependent integral kernel function in terms of shear and normal stress.
+    """
+    K_t = np.exp((tau_t/A*sigma_t) - (tau_0/A*sigma_0)*(sigma_t/sigma_0)**(alpha/A))
+
+
+def K_t_approximation(S_t, A, sigma_0, tau_t, tau_0, sigma_t, alpha)
+    """
+    (Heimisson, 2019) Stress history-dependent integral kernel function in terms of shear and normal stress
+    Coulomb stress approximation.
+    """
+    delta_tau_t = tau_t - tau_0
+    delta_sigma_t = sigma_t - sigma_0 # my assumption, not explicitly stated
+    S_t = delta_tau_t - (tau_0/sigma_0 - alpha)*delta_sigma_t
+    K_t = np.exp(S_t/(A*sigma_0))
+
+def cumulative_event_count(A, sigma_0, Tau_r, K):
+    """
+    (Heimisson, 2019) Intergral expression for the cumulative number of events  N.
+    A is a constitutive parameter that relates to the rate dependence of friction, 
+    and σ0 is the initial normal stress acting on a population. K(t) is a stress 
+    history-dependent integral kernel function that can be written out explicitly 
+    in terms of shear τ(t) and normal stress σ(t)
+    """
+    t_alpha = A*sigma_0/Tau_r
+    N_r = t_alpha*np.log((1/t_alpha)*K+1)
+    return N_r
+
+def seismicity_rate_intergral(A, sigma_0, Tau_r, K):
+    """
+    (Heimisson, 2019) Integral expression for the seismicity rate R.
+    A is a constitutive parameter that relates to the rate dependence of friction, 
+    and σ0 is the initial normal stress acting on a population. K(t) is a stress 
+    history-dependent integral kernel function that can be written out explicitly 
+    in terms of shear τ(t) and normal stress σ(t)
+    """
+    t_alpha = A*sigma_0/Tau_r
+    R_r = K/(1+(1/t_alpha)*K) 
