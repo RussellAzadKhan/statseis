@@ -3104,7 +3104,7 @@ def K_t(tau_t, A, sigma_t, tau_0, sigma_0, alpha):
     K_t = np.exp((tau_t/A*sigma_t) - (tau_0/A*sigma_0)*(sigma_t/sigma_0)**(alpha/A))
 
 
-def K_t_approximation(S_t, A, sigma_0, tau_t, tau_0, sigma_t, alpha)
+def K_t_approximation(S_t, A, sigma_0, tau_t, tau_0, sigma_t, alpha):
     """
     (Heimisson, 2019) Stress history-dependent integral kernel function in terms of shear and normal stress
     Coulomb stress approximation.
