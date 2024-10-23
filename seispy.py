@@ -3021,7 +3021,6 @@ def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc
                 results_df.to_csv(f'../data/{catalogue_name}/Mc_cut/foreshocks/default_params_{date}.csv', index=False)
     return results_df
 
-    
 def clustering_event_rate(k, t, c, p, r, q):
     """
     Shearer 2012. clustering behaviour expected for separable time and distance power laws,
@@ -3139,3 +3138,4 @@ def seismicity_rate_intergral(A, sigma_0, Tau_r, K):
     """
     t_alpha = A*sigma_0/Tau_r
     R_r = K/(1+(1/t_alpha)*K) 
+
