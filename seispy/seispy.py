@@ -31,7 +31,7 @@ from collections import namedtuple
 import shutil
 from tqdm import tqdm
 import seispy.utils as utils
-from mc_lilliefors import McLilliefors
+from seispy.mc_lilliefors import McLilliefors
 
 # sys.path.append('../../learning/mc-lilliefors-master copy')
 
@@ -286,7 +286,7 @@ def get_mbs(mag, mbin, dM = 0.4, min_mc = -3):
     return mc, this_fmd[0], b, b_avg, shibolt_unc
 print('MBS Funtion Loaded')
 
-def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_radius=10, inc=5, max_r=50, min_n=400):
+def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_radius=10, inc=5, max_r=50, min_n=400, Lilliefors=False):
     """
     Calculate Mc using b-value stability (Mbass) and maximumum curvature (Maxc) around mainshock epicenters.
     """
@@ -312,9 +312,10 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
                 local_cat = create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
             elif radius>=max_r:
                 break
-        McLil = Mc_Lilliefors(local_cat['MAGNITUDE'])
-        Lilliefors_Mc_list.append(McLil)
-        Lilliefors_Mc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=McLil)[1])
+        if Lilliefors==True:
+            McLil = Mc_Lilliefors(local_cat['MAGNITUDE'])
+            Lilliefors_Mc_list.append(McLil)
+            Lilliefors_Mc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=McLil)[1])
         Mbass_mc = get_mbs(np.array(local_cat['MAGNITUDE']), mbin=0.1)[0]
         Mbass.append(Mbass_mc)
         Maxc_mc = get_maxc(local_cat['MAGNITUDE'], mbin=0.1)+0.2
@@ -325,8 +326,9 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
         Maxc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=Maxc_mc)[1])
         i+=1
         clear_output(wait=True)
-    mainshocks_file[f'McLil_50'] = Lilliefors_Mc_list
-    mainshocks_file[f'b_McLil_50'] = Lilliefors_Mc_b
+    if Lilliefors==True:
+        mainshocks_file[f'McLil_50'] = Lilliefors_Mc_list
+        mainshocks_file[f'b_McLil_50'] = Lilliefors_Mc_b
     mainshocks_file[f'Mbass_50'] = Mbass
     mainshocks_file[f'b_Mbass_50'] = Mbass_b
     mainshocks_file[f'Mc'] = Mbass
@@ -421,11 +423,11 @@ def plot_fmd(local_cat, save_path=None, ID=np.nan, radius=50):
     if save_path!=None:
         plt.savefig(save_path)
 
-def plot_FMD_mainshock_subset(mshock_file, name, outfile_name, catalog):
+def plot_FMD_mainshock_subset(mshock_file, name, outfile_name, catalog, stations=None):
     Path(f'../outputs/{outfile_name}/FMD').mkdir(parents=True, exist_ok=True)
     for mainshock in tqdm(mshock_file.itertuples(), total=len(mshock_file)):
         local_cat = create_local_catalogue(mainshock, earthquake_catalogue=catalog, catalogue_name=name, radius_km=100)
-        plot_local_cat(mainshock=mainshock, local_cat=local_cat, catalogue_name=name, Mc_cut=False, stations=station_df,
+        plot_local_cat(mainshock=mainshock, local_cat=local_cat, catalogue_name=name, Mc_cut=False, stations=stations, earthquake_catalogue=catalog,
                     min_days=math.ceil(local_cat['DAYS_TO_MAINSHOCK'].max()), max_days=0,
                     radius_km=mainshock.radii_50, box_halfwidth_km=100, aftershock_days=math.floor(local_cat['DAYS_TO_MAINSHOCK'].min()))
         print(mainshock.n_for_Mc_50)
@@ -576,7 +578,7 @@ def create_spatial_plot(mainshock, local_cat, catalogue_name, Mc_cut, min_days=3
             plt.savefig(f"../outputs/{catalogue_name}/Mc_cut/spatial_plots/{mainshock_ID}_{radius_km}km_{min_days}_to_{max_days}.png")
     plt.show()
 
-def plot_local_cat(mainshock, local_cat, catalogue_name, Mc_cut, min_days=365, max_days=0, radius_km=10, save=True, 
+def plot_local_cat(mainshock, local_cat, earthquake_catalogue, catalogue_name, Mc_cut, min_days=365, max_days=0, radius_km=10, save=True, 
                    box_halfwidth_km=30, aftershock_days=-20, foreshock_days=20, stations=None):
     
     event_marker_size = (lambda x: 50+10**(x/1.25))
@@ -587,8 +589,7 @@ def plot_local_cat(mainshock, local_cat, catalogue_name, Mc_cut, min_days=365, m
     mainshock_LAT = mainshock.LAT
     mainshock_DATETIME = mainshock.DATETIME
 
-    # Pirate coding, should remove local cat argument function as this could get messy
-    local_cat = create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=catalogue_dict[catalogue_name].copy(), radius_km=box_halfwidth_km, box=True)
+    local_cat = create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
 
     min_box_lon, min_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, -box_halfwidth_km, -box_halfwidth_km)
     max_box_lon, max_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, box_halfwidth_km, box_halfwidth_km)
@@ -801,7 +802,8 @@ def select_mainshocks(earthquake_catalogue,
                       minimum_exclusion_distance = 20,
                       scaling_exclusion_distance = 5,
                       minimum_exclusion_time = 50,
-                      scaling_exclusion_time = 25
+                      scaling_exclusion_time = 25,
+                      station_file=None
                       ):
     """
     Return mainshocks from an earthquake catalogue selected using both the methods from Trugman & Ross (2019) and Moutote et al. (2021).
@@ -884,8 +886,11 @@ def select_mainshocks(earthquake_catalogue,
         
         TR_mainshocks_to_exclude.extend(list(earthquakes_within_exclusion_criteria['ID']))
 
-        distance_to_stations = np.array(utils.calculate_distance_pyproj_vectorized(mainshock.LON, mainshock.LAT, station_no_dup['LON'],  station_no_dup['LAT']))
-        distance_to_stations = np.sort(distance_to_stations)
+        if station_file is not None and not station_file.empty:
+            distance_to_stations = np.array(utils.calculate_distance_pyproj_vectorized(mainshock.LON, mainshock.LAT, station_file['LON'],  station_file['LAT']))
+            distance_to_stations = np.sort(distance_to_stations)
+        else:
+            distance_to_stations = [np.nan]*4
         
         results_dict = {'ID':mainshock.ID,
                         'DATETIME':mainshock.DATETIME,
@@ -910,6 +915,7 @@ def select_mainshocks(earthquake_catalogue,
                         'STA_4_km':distance_to_stations[3]}
         
         exclusion_criteria_results.append(results_dict)
+        clear_output(wait=True)
     
     exclusion_criteria_results = pd.DataFrame.from_dict(exclusion_criteria_results)
 

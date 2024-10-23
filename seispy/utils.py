@@ -27,6 +27,11 @@ from sklearn import preprocessing
 from pyproj import Transformer
 import cartopy.feature as cfeature
 
+def get_CDF(data):
+    data_sorted = np.sort(data)
+    cdf = np.arange(1, len(data_sorted) + 1) / len(data_sorted)
+    return data_sorted, cdf
+
 def convert_extent_to_epsg3857(extent):
     transformer = Transformer.from_crs("epsg:4326", "epsg:3857", always_xy=True)
     x_min, y_min = transformer.transform(extent[0], extent[2])

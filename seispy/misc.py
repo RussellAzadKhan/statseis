@@ -1,7 +1,7 @@
 """
 Miscellaneous functions
 """
-
+import numpy as np
 
 def clustering_event_rate(k, t, c, p, r, q):
     """
