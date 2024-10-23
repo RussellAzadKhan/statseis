@@ -950,16 +950,13 @@ def select_mainshocks(earthquake_catalogue,
 
     return exclusion_criteria_results
 
-def plot_single_mainshock(ID, catalogue_name, Mc_cut = False):
-    earthquake_catalogue = catalogue_dict[catalogue_name].copy()
-    mainshock_file = mainshock_dict[catalogue_name]
-    mainshock = mainshock_file.loc[mainshock_file['ID']==ID]
-    RowTuple = namedtuple('RowTuple', mainshock.columns)
-    mainshock = [RowTuple(*row) for row in mainshock.values][0]
-    local_cat = create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name)
+# Defunct? Same as plot local cat?
+def plot_single_mainshock(ID, mainshock_file, catalogue_name, earthquake_catalogue, Mc_cut = False):
+    mainshock = iterable_mainshock(ID, mainshock_file)
+    local_cat = create_local_catalogue(mainshock=mainshock, earthquake_catalogue=earthquake_catalogue, catalogue_name=catalogue_name)
     if Mc_cut==True:
         local_cat = apply_Mc_cut(local_cat)
-    plot_local_cat(mainshock=mainshock, local_cat=local_cat, Mc_cut=Mc_cut, catalogue_name=catalogue_name)
+    plot_local_cat(mainshock=mainshock, local_cat=local_cat, Mc_cut=Mc_cut, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue)
 
 def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, iterations=10000,
                               local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=345, Wetzler_cutoff=3):
@@ -1031,7 +1028,6 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
     range_scaler = 100    
 
     sliding_window_points = np.array(np.arange((-cut_off_day+foreshock_window)*range_scaler, -foreshock_window*range_scaler, 1))/range_scaler*-1
-    print(len(sliding_window_points))
     sliding_window_counts = np.array([len(regular_seismicity_period[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
                                                                     (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window))]) for point in sliding_window_points])
 
@@ -1551,7 +1547,7 @@ def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc
             # local_cat = apply_Mc_cut(local_cat)
             local_cat = local_cat.loc[local_cat['MAGNITUDE']>=mainshock.Mc].copy()
         # create_spatial_plot(mainshock=mainshock, local_cat=local_cat, Mc_cut=Mc_cut, catalogue_name=catalogue_name, save=save)
-        plot_local_cat(mainshock=mainshock, local_cat=local_cat, catalogue_name=catalogue_name, Mc_cut=Mc_cut)
+        plot_local_cat(mainshock=mainshock, local_cat=local_cat, earthquake_catalogue=earthquake_catalogue, catalogue_name=catalogue_name, Mc_cut=Mc_cut)
         results_dict, file_dict = identify_foreshocks_short(local_catalogue=local_cat, mainshock=mainshock, earthquake_catalogue=earthquake_catalogue)
         plot_models(mainshock=mainshock, results_dict=results_dict, file_dict=file_dict, Mc_cut=Mc_cut, catalogue_name=catalogue_name, save=save)
         results_list.append(results_dict)
