@@ -4,26 +4,10 @@ Utility funcitons
 
 import datetime as dt
 import math
-import random
-from decimal import Decimal
 from math import asin, cos, radians, sin, sqrt
-import os
-from pathlib import Path
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy
-import scipy.special as special
-import scipy.stats as stats
-import statsmodels.api as sm
-# import utm
-from scipy.special import factorial
-from scipy.stats import gamma, ks_2samp, kstest, nbinom, poisson, truncnorm
 import pyproj
-import glob
-from IPython.display import clear_output, Image
-from functools import reduce
-from sklearn import preprocessing
 from pyproj import Transformer
 import cartopy.feature as cfeature
 
@@ -121,7 +105,6 @@ def reformat_catalogue(df):
     df.columns = ['ID', 'MAGNITUDE', 'DATETIME', 'DEPTH', 'LON', 'LAT'] 
     return df
 
-# chat GPT function
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance in kilometers between two points 
@@ -170,7 +153,6 @@ def min_max_median_mean(numbers):
     return min, max, median, mean
 
 
-# from stack overflow
 def find_nearest(array, value):
     """
     Returns the nearest value in an array to its argument.
@@ -180,7 +162,6 @@ def find_nearest(array, value):
     return array[idx]
 
 
-# Chat GPT?
 def calculate_distance_pyproj_vectorized(lon1, lat1, lon2_array, lat2_array, ellipsoid="WGS84"):
     """
     Returns the distance (km) from a point to an array of points using the Pyproj module

@@ -4,7 +4,6 @@ Many functions require the renaming of earthquake catalog dataframe columns to: 
 """
 import datetime as dt
 import math
-import random
 import os
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -14,16 +13,12 @@ import scipy.special as special
 import scipy.stats as stats
 from scipy.stats import gamma, poisson
 import pyproj
-import glob
 from IPython.display import clear_output
-from functools import reduce
-from sklearn import preprocessing
 import string
 import matplotlib.collections
 from matplotlib.lines import Line2D
 import seaborn as sns
 from pathlib import Path
-import statsmodels.api as sm
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from matplotlib.patches import Circle
@@ -31,9 +26,6 @@ from collections import namedtuple
 import shutil
 from tqdm import tqdm
 import seispy.utils as utils
-from seispy.mc_lilliefors import McLilliefors
-
-# sys.path.append('../../learning/mc-lilliefors-master copy')
 
 colours = sns.color_palette("colorblind", 10)
 colour_names = ['dark blue', 
@@ -96,7 +88,7 @@ def freq_mag_dist(mag, mbin):
 
 def b_val_max_likelihood(mag, mc, mbin=0.1):
     """
-    This code calculates b values by maximum likelihood estimate. It takes in an array of magnitude (mag), a
+    Written by Sacah Lapins. This code calculates b values by maximum likelihood estimate. It takes in an array of magnitude (mag), a
     binning (mbin, we use 0.1) and a completeness magnitude (mc). It provides returns productivity (a), b value
     (b), and two estimates of uncertainty (aki_unc, shibolt_unc). [Aki 1965, Bender 1983, CORSSA, Lapins] - modified
     """
@@ -113,7 +105,7 @@ def b_val_max_likelihood(mag, mc, mbin=0.1):
 
 def Mc_by_maximum_curvature(mag, mbin=0.1, correction=0.2):
     """
-    This code returns the magnitude of completeness estimates using the maximum curvature method. It takes a magnitude
+    Written by Sacha Lapins. This code returns the magnitude of completeness estimates using the maximum curvature method. It takes a magnitude
     array (mag) and binning (mbin). [Wiemer & Wyss (2000), Lapins, CORSSA] - modified
     """
     mag = np.array(mag)
@@ -123,7 +115,7 @@ def Mc_by_maximum_curvature(mag, mbin=0.1, correction=0.2):
  
 def Mc_by_goodness_of_fit(mag, mbin=0.1):
     """
-    This code returns the magnitude of completeness estimates using a goodness of fit method. It takes a magnitude
+    Written by Sacha Lapins. This code returns the magnitude of completeness estimates using a goodness of fit method. It takes a magnitude
     array (mag) and binning (mbin, we use 0.1). It returns the estimate (mc), the fmd (this_fmd[0]) and confidence level (R).
     The equation numbers refer to those in the CORSSA documentation(*). It defaults to maxc if confidence levels
     are not met. [Wiemer & Wyss (2000), Lapins, CORSSA] - modified
@@ -159,7 +151,7 @@ def Mc_by_goodness_of_fit(mag, mbin=0.1):
  
 def Mc_by_b_value_stability(mag, mbin=0.1, dM = 0.4, min_mc = -3, return_b=False):
     """
-    This code returns the magnitude of completeness estimates using a b value stability method. It takes a magnitude
+    Written by Sacha Lapins. This code returns the magnitude of completeness estimates using a b value stability method. It takes a magnitude
     array (mag), binning (mbin, we use 0.1), number of magnitude units to calculate a rolling average b value over (dM,
     we use 0.4) and a minimum mc to test (min_mc). The outputs are a completeness magnitude (mc), frequency magnitude
     distribution (this_fmd[0]), the b value calculated for this mc and average b(*) (b and b_average) and b value uncertainty
@@ -202,24 +194,10 @@ def Mc_by_b_value_stability(mag, mbin=0.1, dM = 0.4, min_mc = -3, return_b=False
 #     return mc, this_fmd[0], b, b_avg, shibolt_unc
     return mc, b#, this_fmd[0], b, b_avg, shibolt_unc
 
-### Code from paper 1 that I want in Seispy? Do I want it all?
-
-def Mc_Lilliefors(magnitudes, Mstart=-0.5, n_repeats=50):
-    """
-    Estimate Mc using the Lilliefors method (Herrmann and Marzhocchi, 2024) 
-    """
-    lill = McLilliefors(magnitudes, # signif_lev=0.1  # [default: 0.1]
-                        )
-
-    lill.calc_testdistr_mcutoff(
-        n_repeats=n_repeats,  # number of iterations for the random noise
-        Mstart=Mstart,  # lowest magnitude for which to perform the test
-        # log=False,  # whether to show anythe progress bar
-        )
-    Mc = lill.estimate_Mc_expon_test()
-    return Mc
-
 def fmd(mag, mbin):
+    """
+    Written by Sacha Lapins.
+    """
     minmag = math.floor(min(mag/mbin)) * mbin # Lowest bin
     maxmag = math.ceil(max(mag/mbin)) * mbin # Highest bin bin
     mi = np.arange(minmag, maxmag + mbin, mbin) # Make array of bins
@@ -232,6 +210,9 @@ def fmd(mag, mbin):
 print('FMD Function Loaded')
 
 def b_est(mag, mbin, mc):
+    """
+    Written by Sacha Lapins.
+    """
     mag_above_mc = mag[np.where(mag > round(mc,1)-mbin/2)[0]]# Magnitudes for events larger than cut-off magnitude mc
     n = mag_above_mc.shape[0] # No of. events larger than cut-off magnitude mc
     mbar = np.mean(mag_above_mc) # Mean magnitude for events larger than cut-off magnitude mc
@@ -243,13 +224,18 @@ def b_est(mag, mbin, mc):
 print('MLM B Function Loaded')
 
 def get_maxc(mag, mbin):
+    """
+    Written by Sacha Lapins.
+    """
     this_fmd = fmd(mag, mbin) # uses the fmd distribution (a previous function)
     maxc = this_fmd[0][np.argmax(this_fmd[1])] # Mag bin with highest no. of events
     return round(maxc, 1)
 print('MAXC Function Loaded')
 
 def get_mbs(mag, mbin, dM = 0.4, min_mc = -3):
- 
+    """
+    Written by Sacha Lapins.
+    """
     this_fmd = fmd(mag, mbin) # FMD
     this_maxc = get_maxc(mag, mbin) # Needed further down
     # Zeros to accommodate synthetic GR distributions for each magnitude bin
@@ -286,7 +272,7 @@ def get_mbs(mag, mbin, dM = 0.4, min_mc = -3):
     return mc, this_fmd[0], b, b_avg, shibolt_unc
 print('MBS Funtion Loaded')
 
-def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_radius=10, inc=5, max_r=50, min_n=400, Lilliefors=False):
+def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_radius=10, inc=5, max_r=50, min_n=400):
     """
     Calculate Mc using b-value stability (Mbass) and maximumum curvature (Maxc) around mainshock epicenters.
     """
@@ -298,8 +284,6 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
     Mbass_b = []
     Maxc_b = []
     Gft_Mc = []
-    Lilliefors_Mc_list = []
-    Lilliefors_Mc_b = []
     i = 1
     for mainshock in tqdm(mainshocks_file.itertuples(), total=len(mainshocks_file)):
         # print(f"{catalogue_name}")
@@ -312,10 +296,6 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
                 local_cat = create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
             elif radius>=max_r:
                 break
-        if Lilliefors==True:
-            McLil = Mc_Lilliefors(local_cat['MAGNITUDE'])
-            Lilliefors_Mc_list.append(McLil)
-            Lilliefors_Mc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=McLil)[1])
         Mbass_mc = get_mbs(np.array(local_cat['MAGNITUDE']), mbin=0.1)[0]
         Mbass.append(Mbass_mc)
         Maxc_mc = get_maxc(local_cat['MAGNITUDE'], mbin=0.1)+0.2
@@ -326,9 +306,6 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
         Maxc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=Maxc_mc)[1])
         i+=1
         clear_output(wait=True)
-    if Lilliefors==True:
-        mainshocks_file[f'McLil_50'] = Lilliefors_Mc_list
-        mainshocks_file[f'b_McLil_50'] = Lilliefors_Mc_b
     mainshocks_file[f'Mbass_50'] = Mbass
     mainshocks_file[f'b_Mbass_50'] = Mbass_b
     mainshocks_file[f'Mc'] = Mbass
@@ -806,8 +783,10 @@ def select_mainshocks(earthquake_catalogue,
                       station_file=None
                       ):
     """
-    Return mainshocks from an earthquake catalogue selected using both the methods from Trugman & Ross (2019) and Moutote et al. (2021).
-
+    Select mainshocks from an earthquake catalogue using the following methods:
+    MDET - Magnitude-Dependent Exclusion Thresholds (Trugman & Ross, 2019);
+    FET - Fixed Exclusion Thresholds (Moutote et al., 2021).
+    DDET - Distance-Dependent Exclusion Thresholds.
     """
     
     earthquakes_above_magnitude_threshold = earthquake_catalogue.loc[earthquake_catalogue['MAGNITUDE'] >= mainshock_magnitude_threshold].copy()
@@ -960,6 +939,13 @@ def plot_single_mainshock(ID, mainshock_file, catalogue_name, earthquake_catalog
 
 def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, iterations=10000,
                               local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=345, Wetzler_cutoff=3):
+    """
+    Identify foreshocks before mainshocks using the following methods:
+        BP - Background Poisson (Trugman and Ross, 2019);
+        G-IET - Gamma inter-event time (van den Ende & Ampuero, 2020);
+        ESR - Empirical Seismicity Rate (van den Ende & Ampuero, 2020).
+        We create code for the BP and ESR methods. We integrate the publically available code for the G-IET method (van den Ende & Ampuero, 2020).
+    """
     
     mainshock_ID = mainshock.ID
     mainshock_LON = mainshock.LON
@@ -1567,373 +1553,3 @@ def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc
                 Path(f'../data/{catalogue_name}/Mc_cut/foreshocks/').mkdir(parents=True, exist_ok=True)
                 results_df.to_csv(f'../data/{catalogue_name}/Mc_cut/foreshocks/{save_name}_{date}.csv', index=False)
     return results_df
-
-# Not used in paper 1
-def ESR_model(mainshock, earthquake_catalogue, local_catalogue,
-              local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=365):
-    
-    """
-    Calculate signals prior to mainshocks in a sliding window: seismicity rates, distances to mainshock.
-    """
-    
-    mainshock_ID = mainshock.ID
-    mainshock_LON = mainshock.LON
-    mainshock_LAT = mainshock.LAT
-    mainshock_DATETIME = mainshock.DATETIME
-    mainshock_Mc = mainshock.Mc
-    mainshock_MAG = mainshock.MAGNITUDE
-
-    local_catalogue = local_catalogue[(local_catalogue['DATETIME'] < mainshock_DATETIME) &\
-                                        (local_catalogue['DAYS_TO_MAINSHOCK'] < modelling_time_period+foreshock_window) &\
-                                        (local_catalogue['DAYS_TO_MAINSHOCK'] > 0)  &\
-                                        (local_catalogue['DISTANCE_TO_MAINSHOCK'] < local_catalogue_radius) &\
-                                        (local_catalogue['ID'] != mainshock_ID)
-                                        ].copy()
-
-    regular_seismicity_period = local_catalogue[(local_catalogue['DAYS_TO_MAINSHOCK'] >= foreshock_window)].copy()
-    foreshocks = local_catalogue[(local_catalogue['DAYS_TO_MAINSHOCK'] < foreshock_window)].copy()
-
-    n_local_catalogue = len(local_catalogue)
-    n_regular_seismicity_events = len(regular_seismicity_period)
-    n_events_in_foreshock_window = len(foreshocks)
-    foreshock_distance = np.median(foreshocks['DISTANCE_TO_MAINSHOCK'])
-
-    catalogue_start_date = earthquake_catalogue['DATETIME'].iloc[0]
-    time_since_catalogue_start = (mainshock_DATETIME - catalogue_start_date).total_seconds()/3600/24
-    cut_off_day = math.floor(time_since_catalogue_start)
-    if cut_off_day > 365:
-        cut_off_day = 365
-    range_scaler = 100    
-
-    sliding_window_points = np.array(np.arange((-cut_off_day+foreshock_window)*range_scaler, -foreshock_window*range_scaler, 1))/range_scaler*-1
-    sliding_window_counts = np.array([len(regular_seismicity_period.loc[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
-                                                                    (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window))]) for point in sliding_window_points])
-    sliding_window_distances = np.array([np.median(regular_seismicity_period.loc[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
-                                                                    (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window)), 'DISTANCE_TO_MAINSHOCK']) for point in sliding_window_points])
-
-    try:
-        distance_probability = len(sliding_window_distances[sliding_window_distances >= foreshock_distance])/len(sliding_window_distances)
-    except:
-        distance_probability = float('nan')
-
-    try:
-        max_window = max(sliding_window_counts)
-    except:
-        max_window = float('nan')
-
-    if n_events_in_foreshock_window > max_window:
-        max_window_method = 0.0
-    elif n_events_in_foreshock_window <= max_window:
-        max_window_method = 1.0
-    else:
-        max_window_method = float('nan')
-
-    if (len(sliding_window_counts)==0) & (n_events_in_foreshock_window > 0):
-        sliding_window_probability = 0.00
-        sliding_window_99CI = float('nan')
-    elif (len(sliding_window_counts)==0) & (n_events_in_foreshock_window == 0):    
-        sliding_window_probability = 1.00
-        sliding_window_99CI = float('nan')
-    else:
-        sliding_window_probability = len(sliding_window_counts[sliding_window_counts >= n_events_in_foreshock_window])/len(sliding_window_counts)
-    # sliding_window_probability = len(list(filter(lambda c: c >= n_events_in_foreshock_window, sliding_window_counts)))/len(sliding_window_counts)
-        sliding_window_99CI = np.percentile(sliding_window_counts,99)
-                
-    results_dict = {'ID':mainshock_ID,
-                    'MAGNITUDE':mainshock_MAG,
-                    'LON':mainshock_LON,
-                    'LAT':mainshock_LAT,
-                    'DATETIME':mainshock_DATETIME,
-                    'DEPTH':mainshock.DEPTH,
-                    'Mc':mainshock_Mc,
-                    'time_since_catalogue_start':time_since_catalogue_start,
-                    'n_regular_seismicity_events':n_regular_seismicity_events,
-                    'n_events_in_foreshock_window':n_events_in_foreshock_window,
-                    'max_20day_rate':max_window,
-                    'ESR':sliding_window_probability,
-                    'ESR_99CI':sliding_window_99CI,
-                    'ESD':distance_probability,
-                    'cut_off_day':cut_off_day
-                    }
-    
-    file_dict = {'local_catalogue':local_catalogue,
-                #  'local_catalogue_pre_Mc_cutoff':local_catalogue_pre_Mc_cutoff,
-                #  'local_catalogue_below_Mc':local_catalogue_below_Mc,
-                 'foreshocks':foreshocks,
-                #  'foreshocks_below_Mc':foreshocks_below_Mc,
-                 'sliding_window_points':sliding_window_points,
-                 'sliding_window_counts':sliding_window_counts,
-                 'sliding_window_distances':sliding_window_distances
-                 }
-    
-    return results_dict, file_dict
-
-def stack_mainshock_signals(catalogue_name,
-                            mag_thresh = 4,
-                            distance_threshold = 10,
-                            time_threshold = 365,
-                            bin_width = 20,
-                           test=False):
-    """
-    Function to stack mainshock precursory signals.
-    [TASK: update with new file paths, no seispy function calls, Pyproj not UTM, and probably other things].
-    """
-    
-    earthquake_catalogue = pd.read_csv('../catalogues/reformatted_catalogues/' + catalogue_name + '_reformatted.csv')
-    string_to_datetime_df(earthquake_catalogue)
-    output_path = '../outputs/' + catalogue_name
-    Path(output_path + '/data/modelling_data/mainshock_slices').mkdir(parents=True, exist_ok=True)
-    earthquake_catalogue['DAY'] = (earthquake_catalogue['DATETIME'] - earthquake_catalogue.iloc[0].DATETIME).apply(lambda d: (d.total_seconds()/(24*3600)))
-    
-    Path(output_path + '/data/modelling_data/mainshock_slices/local_catalogues').mkdir(parents=True, exist_ok=True)
-    Path(output_path + '/data/modelling_data/mainshock_slices/sampling_results').mkdir(parents=True, exist_ok=True)
-    Path(output_path + '/images/mainshock_slices').mkdir(parents=True, exist_ok=True)
-    Path(output_path + '/data/mainshocks/').mkdir(parents=True, exist_ok=True)
-    Path(output_path + '/data/stacked_mainshocks_results').mkdir(parents=True, exist_ok=True)
-    Path(output_path + '/images/big_picture_results').mkdir(parents=True, exist_ok=True)
-
-    large_earthquakes = earthquake_catalogue[earthquake_catalogue['MAGNITUDE']>=mag_thresh].copy()
-    if test==True:
-            large_earthquakes = large_earthquakes.iloc[0:2].copy()
-            
-    large_earthquakes.sort_values(by='DATETIME', inplace=True)
-    
-    n_mainshocks = str(len(large_earthquakes))
-    Mc = Mc_by_maximum_curvature(earthquake_catalogue['MAGNITUDE'], mbin=0.1)
-    print("Events above Mw " + str(mag_thresh) + " : " + n_mainshocks)
-    print("Mc: " + str(Mc))
-    print(" ")
-    IDs_to_skip = []
-    for mainshock in large_earthquakes.itertuples():
-        DAYS_TO_MAINSHOCK = (large_earthquakes['DATETIME'] - mainshock.DATETIME).apply(lambda d: (d.total_seconds()/(24*3600)))
-        KM_TO_MAINSHOCK = ((((large_earthquakes['EASTING'] - mainshock.EASTING)**2) + ((large_earthquakes['NORTHING'] - mainshock.NORTHING)**2))**0.5)
-        local_catalogue = large_earthquakes.loc[(KM_TO_MAINSHOCK < distance_threshold) & (DAYS_TO_MAINSHOCK >=0)  & (DAYS_TO_MAINSHOCK <= time_threshold)].copy()
-        nearby_large_earthquakes = local_catalogue.loc[(local_catalogue['MAGNITUDE']>=mag_thresh) & (mainshock.ID!=local_catalogue['ID'])].copy()
-        IDs_to_skip.extend(nearby_large_earthquakes['ID'])
-    solo_large_earthquakes = large_earthquakes[~large_earthquakes['ID'].isin(IDs_to_skip)]
-    n_mainshocks = str(len(solo_large_earthquakes))
-
-    print("First events above threshold in sequences: " + n_mainshocks)
-    
-    window_points = np.array(range(-time_threshold+bin_width,1))
-    list_of_sampling_results = []
-    count = 0
-    for mainshock in solo_large_earthquakes.itertuples():
-        print('mainshock ' + str(mainshock.ID))
-        print('    date: ' + str(mainshock.DATETIME))
-
-        csv_file = str(mainshock.ID) + '.csv'
-
-        if Path(output_path + '/data/modelling_data/mainshock_slices/local_catalogues/' + csv_file).exists() == True:
-            events_within_100km = pd.read_csv(output_path + '/data/modelling_data/mainshock_slices/local_catalogues/' + csv_file)
-            string_to_datetime(events_within_100km)
-        else:
-            km_to_mainshock = ((((earthquake_catalogue.EASTING - mainshock.EASTING)**2) + ((earthquake_catalogue.NORTHING - mainshock.NORTHING)**2))**0.5)
-            events_within_100km = earthquake_catalogue.loc[(km_to_mainshock < 100)].copy()
-            events_within_100km['DAYS_TO_MAINSHOCK'] = (events_within_100km['DATETIME'] - mainshock.DATETIME).apply(lambda d: (d.total_seconds()/(24*3600)))
-            events_within_100km['KM_TO_MAINSHOCK'] = ((((events_within_100km.EASTING - mainshock.EASTING)**2) + ((earthquake_catalogue.NORTHING - mainshock.NORTHING)**2))**0.5)
-            
-            inter_event_distances = [] 
-            for event in events_within_100km.itertuples():
-                try:
-                    point_1 = (event.EASTING, event.NORTHING)
-                    point_2 = (events_within_100km.EASTING.iloc[event.Index+1], events_within_100km.NORTHING.iloc[event.Index+1])
-            #         euclidean_distance = np.sqrt((x1-x2)**2 + (y1-y2)**2)
-                    euclidean_distance = dist(point_1, point_2)
-                except:
-                    euclidean_distance = np.NAN
-
-                inter_event_distances.append(euclidean_distance)
-
-            events_within_100km['inter_event_distances'] = inter_event_distances
-            events_within_100km['inter_event_distances'] = events_within_100km['inter_event_distances'].shift(1)
-
-#             time_series = datetime_to_decimal_days(events_within_100km['DATETIME'])
-            time_series = datetime_to_decimal_days(events_within_100km['DATETIME'])
-            inter_event_times = np.diff(time_series)
-            inter_event_times = np.insert(inter_event_times, 0, np.NAN)
-            events_within_100km['inter_event_times'] = inter_event_times
-            
-            events_within_100km.to_csv(output_path + '/data/modelling_data/mainshock_slices/local_catalogues/' + csv_file, index=False)
-
-        local_catalogue = events_within_100km.loc[(events_within_100km['KM_TO_MAINSHOCK'] < distance_threshold) & ((events_within_100km['DAYS_TO_MAINSHOCK']**2)**0.5 < time_threshold)].copy()
-        print('    events within ' + str(time_threshold) + ' days: ' + str(len(local_catalogue)))
-
-        nearby_large_earthquakes = local_catalogue.loc[(local_catalogue['MAGNITUDE']>=mag_thresh) & (mainshock.ID!=local_catalogue['ID'])].copy()
-
-        pre_mainshock = local_catalogue.loc[local_catalogue['DAYS_TO_MAINSHOCK']<0].copy()
-        post_mainshock = local_catalogue.loc[local_catalogue['DAYS_TO_MAINSHOCK']>=0].copy()
-
-        sampling_results = []
-        for day in window_points:
-            windowed_data = local_catalogue[(local_catalogue['DAYS_TO_MAINSHOCK'] < day) & (local_catalogue['DAYS_TO_MAINSHOCK'] >= day - bin_width)]
-
-            avg_x, avg_y = np.mean(windowed_data['EASTING']), np.mean(windowed_data['NORTHING'])
-            SD_x, SD_y = np.std(windowed_data['EASTING']), np.std(windowed_data['NORTHING'])
-            var_x, var_y = np.var(windowed_data['EASTING']), np.var(windowed_data['NORTHING'])
-            
-            results_dict = {'DAY':day,
-                            'EVENT_RATE': len(windowed_data)/bin_width,
-                            'MOMENT_RATE':sum(windowed_data['MOMENT'])/bin_width,
-                            'AVG_KM_TO_MSHOCK':np.mean(windowed_data['KM_TO_MAINSHOCK']),
-                            'inter_event_times':np.mean(windowed_data['inter_event_times']),
-                            'inter_event_distances':np.mean(windowed_data['inter_event_distances']),
-                            'avg_x':avg_x,
-                            'avg_y':avg_y,
-                            'SD_x':SD_x,
-                            'SD_y':SD_y,
-                            'var_x':var_x,
-                            'var_y':var_y
-                           }
-            sampling_results.append(results_dict)
-        sampling_results = pd.DataFrame.from_dict(sampling_results)
-        
-        sampling_results['NORMALISED_EVENT_RATE'] = preprocessing.minmax_scale(sampling_results['EVENT_RATE'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['NORMALISED_MOMENT_RATE'] = preprocessing.minmax_scale(sampling_results['MOMENT_RATE'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['LOG_MOMENT_RATE'] = np.log(sampling_results['MOMENT_RATE'].replace(0, np.nan))
-        sampling_results['LOG_MOMENT_RATE'].replace(np.nan, 0, inplace=True)
-        sampling_results['NORMALISED_LOG_MOMENT_RATE'] = preprocessing.minmax_scale(sampling_results['LOG_MOMENT_RATE'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['NORM_AVG_KM_TO_MSHOCK'] = preprocessing.minmax_scale(sampling_results['AVG_KM_TO_MSHOCK'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['NORM_IETs'] = preprocessing.minmax_scale(sampling_results['inter_event_times'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['NORM_IEDs'] = preprocessing.minmax_scale(sampling_results['inter_event_distances'], feature_range=(0, 1), axis=0, copy=True)
-
-        points = np.array(sampling_results[['avg_x', 'avg_y']])
-        d = np.diff(points, axis=0)
-        segdists = np.sqrt((d ** 2).sum(axis=1))
-        sampling_results['MIGRATION'] = pd.Series(segdists)
-        
-        points = np.array(sampling_results[['var_x', 'var_y']])
-        d = np.diff(points, axis=0)
-        segvars = np.sqrt((d ** 2).sum(axis=1))
-        sampling_results['LOCALISATION'] = pd.Series(segvars)
-        
-        sampling_results['NORM_MIGRATION'] = preprocessing.minmax_scale(sampling_results['AVG_KM_TO_MSHOCK'], feature_range=(0, 1), axis=0, copy=True)
-        sampling_results['NORM_LOCALISATION'] = preprocessing.minmax_scale(sampling_results['AVG_KM_TO_MSHOCK'], feature_range=(0, 1), axis=0, copy=True)
-        
-        sampling_results.to_csv(output_path + '/data/modelling_data/mainshock_slices/sampling_results/' + csv_file, index=False)
-
-        list_of_sampling_results.append(sampling_results)
-
-        fig, axs = plt.subplots(nrows=6, ncols=1, figsize=(10,10))
-        axs[0].scatter(pre_mainshock['DAYS_TO_MAINSHOCK'], pre_mainshock['MAGNITUDE'], alpha=0.5, color='black')
-        axs[0].scatter(post_mainshock['DAYS_TO_MAINSHOCK'], post_mainshock['MAGNITUDE'], alpha=0.5, color='grey')
-        axs[0].set_xlabel('Days to mainshock', fontsize=20)
-        axs[0].set_ylabel('Mw', fontsize=20)
-        axs[0].scatter(nearby_large_earthquakes['DAYS_TO_MAINSHOCK'], nearby_large_earthquakes['MAGNITUDE'], marker='*', s=200, color='red', zorder=2)
-        axs[0].scatter(0, mainshock.MAGNITUDE, marker='*', s=200, color='red', zorder=2)
-        axs[0].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[0].set_xlim(-time_threshold,time_threshold)
-
-        axs[1].plot(sampling_results['DAY'], sampling_results['EVENT_RATE'], color='magenta', zorder=1)
-        axs[1].set_xlabel('Days to mainshock', fontsize=20)
-        axs[1].set_ylabel('Seismicity rate', fontsize=20)
-        axs[1].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[1].axhline(sampling_results['EVENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-
-        axs[2].plot(sampling_results['DAY'], sampling_results['MOMENT_RATE'], zorder=1, color='dodgerblue')
-        axs[2].set_xlabel('Days to mainshock', fontsize=20)
-        axs[2].set_ylabel('Moment rate', fontsize=20)
-        axs[2].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[2].axhline(sampling_results['MOMENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-        
-        axs[3].plot(sampling_results['DAY'], sampling_results['AVG_KM_TO_MSHOCK'], zorder=1, color='orange')
-        axs[3].set_xlabel('Days to mainshock', fontsize=20)
-        axs[3].set_ylabel('km to Mshock', fontsize=20)
-        axs[3].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[3].axhline(sampling_results['AVG_KM_TO_MSHOCK'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-        
-        axs[4].plot(sampling_results['DAY'], sampling_results['NORM_IETs'], zorder=1)
-        axs[4].set_xlabel('DAY', fontsize=20)
-        axs[4].set_ylabel('IETs', fontsize=20)
-        axs[4].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[4].axhline(sampling_results['NORM_IETs'].iloc[-2], linestyle='--', color='red', alpha=0.5)
-        
-        axs[5].plot(sampling_results['DAY'], sampling_results['NORM_IEDs'], zorder=1)
-        axs[5].set_xlabel('DAY', fontsize=20)
-        axs[5].set_ylabel('IEDs', fontsize=20)
-        axs[5].axvline(0, linestyle='--', color='red', zorder=3)
-        axs[5].axhline(sampling_results['NORM_IEDs'].iloc[-2], linestyle='--', color='red', alpha=0.5)
-
-        fig.tight_layout()
-        png_file = str(mainshock.ID) + '.png'
-        fig.savefig(output_path + '/images/mainshock_slices/' + png_file)
-        plt.show()
-        plt.close()
-
-        count += 1
-        print("    Processed: " + str(count) + ' out of ' + n_mainshocks)
-        print(" ")
-    
-    print("Processed all mainshocks")
-    
-    pd.DataFrame(solo_large_earthquakes, columns=['ID']).to_csv(output_path + '/data/mainshocks/' + n_mainshocks + '_Mw_'  + str(mag_thresh) + 's.csv', index=False)
-    
-    combined_sampling_results = pd.concat(list_of_sampling_results, ignore_index=True)
-    
-    stacked_results = combined_sampling_results.groupby(['DAY']).mean()
-    stacked_results.reset_index(inplace=True)
-    
-    stacked_results.to_csv(output_path + '/data/stacked_mainshocks_results/stacked_Mw_' + str(mag_thresh) + '_results.csv', index=False)
-
-    fig, axs = plt.subplots(nrows=5, ncols=1, figsize=(10,10))
-    fig.suptitle(catalogue_name + '_Mc_' + str(Mc) + '_n_' + n_mainshocks + '_Mw_' + str(mag_thresh) + '+_' + str(distance_threshold) + 'km_' + str(bin_width) + 'daybin_' + str(time_threshold/365) + '_years',
-                fontsize=20)
-#     axs[0].plot(stacked_results['DAY'], stacked_results['EVENT_RATE'], alpha=0.5, label='event rate')
-    axs[0].plot(stacked_results['DAY'], stacked_results['NORMALISED_EVENT_RATE'], alpha=0.5, color='magenta', label='event rate')
-    axs[0].axhline(stacked_results['NORMALISED_EVENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-    axs[0].axvline(0, linestyle='--', color='red', alpha=0.5)
-    axs[0].set_xlabel('Days to mainshock', fontsize=20)
-    axs[0].set_ylabel('Avg seismicity rate', fontsize=20)
-    axs[0].legend(fontsize=20)
-#     ax_twin = axs[0].twinx()
-#     ax_twin.plot(stacked_results['DAY'], stacked_results['NORMALISED_EVENT_RATE'], alpha=0.5, color='cyan', label='normalised')
-#     ax_twin.set_ylabel('Normalised rate')
-#     ax_twin.axhline(stacked_results['NORMALISED_EVENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-#     ax_twin.legend()
-
-#     axs[1].plot(stacked_results['DAY'], stacked_results['LOG_MOMENT_RATE'], alpha=0.5, label='log Mo rate')
-    axs[1].plot(stacked_results['DAY'], stacked_results['NORMALISED_LOG_MOMENT_RATE'], alpha=0.5, color='dodgerblue', label='moment rate')
-    axs[1].axhline(stacked_results['NORMALISED_LOG_MOMENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-    axs[1].axvline(0, linestyle='--', color='red', alpha=0.5)
-    axs[1].set_xlabel('Days to mainshock', fontsize=20)
-    axs[1].set_ylabel('Avg moment rate', fontsize=20)
-    axs[1].legend(fontsize=20)
-#     ax_twin = axs[1].twinx()
-#     ax_twin.plot(stacked_results['DAY'], stacked_results['NORMALISED_LOG_MOMENT_RATE'], alpha=0.5, color='cyan', label='normalised')
-#     ax_twin.set_ylabel('Normalised rate')
-#     ax_twin.axhline(stacked_results['NORMALISED_LOG_MOMENT_RATE'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-#     ax_twin.legend()
-    
-#     axs[2].plot(stacked_results['DAY'], stacked_results['AVG_KM_TO_MSHOCK'], alpha=0.5, label='km away')
-    axs[2].plot(stacked_results['DAY'], stacked_results['NORM_AVG_KM_TO_MSHOCK'], alpha=0.5, color='orange', label='km to Mshock')
-    axs[2].axhline(stacked_results['NORM_AVG_KM_TO_MSHOCK'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-    axs[2].axvline(0, linestyle='--', color='red', alpha=0.5)
-    axs[2].set_xlabel('Days to mainshock', fontsize=20)
-    axs[2].set_ylabel('Avg km to Mshock', fontsize=20)
-    axs[2].legend(fontsize=20)
-#     ax_twin = axs[2].twinx()
-#     ax_twin.plot(stacked_results['DAY'], stacked_results['NORM_AVG_KM_TO_MSHOCK'], alpha=0.5, color='cyan', label='normalised')
-#     ax_twin.set_ylabel('Normalised rate')
-#     ax_twin.axhline(stacked_results['NORM_AVG_KM_TO_MSHOCK'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-#     ax_twin.legend()
-        
-    axs[3].plot(stacked_results['DAY'], stacked_results['NORM_IETs'], alpha=0.5, color='orange', label='IETs')
-    axs[3].axhline(stacked_results['NORM_IETs'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-    axs[3].axvline(0, linestyle='--', color='red', alpha=0.5)
-    axs[3].set_xlabel('Days to mainshock', fontsize=20)
-    axs[3].set_ylabel('IETs', fontsize=20)
-    axs[3].legend(fontsize=20)
-    
-    axs[4].plot(stacked_results['DAY'], stacked_results['NORM_IEDs'], alpha=0.5, color='orange', label='IEDs')
-    axs[4].axhline(stacked_results['NORM_IEDs'].iloc[-1], linestyle='--', color='red', alpha=0.5)
-    axs[4].axvline(0, linestyle='--', color='red', alpha=0.5)
-    axs[4].set_xlabel('Days to mainshock', fontsize=20)
-    axs[4].set_ylabel('IEDs', fontsize=20)
-    axs[4].legend(fontsize=20)
-    
-    outfile_name  = n_mainshocks + '_Mw_' + str(mag_thresh) + 's_' + str(distance_threshold) + 'km_' + str(bin_width) + 'daybin_' + str(time_threshold) + 'days_results.png' 
-    plt.savefig(output_path + '/images/big_picture_results/' + outfile_name)
-    
-    print("selected: " + str(len(solo_large_earthquakes)) + ' out of ' + n_mainshocks + ' earthquakes above Mw ' + str(mag_thresh))
-    
-    return stacked_results 
