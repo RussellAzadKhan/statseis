@@ -25,7 +25,7 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import seispy.utils as utils
+import statseis.utils as utils
 
 colours = sns.color_palette("colorblind", 10)
 colour_names = ['dark blue', 
