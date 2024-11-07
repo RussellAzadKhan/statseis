@@ -1477,6 +1477,8 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
                                 # gamma.ppf(0.999, a=y_gam_IETs, loc=loc_gam_IETs, scale=mu_gam_IETs))
         # x_gam_IETs = range(min(N_eq), max(N_eq))
         min_x, max_x = round(gamma.ppf(0.001, a=y_gam_IETs, loc=loc_gam_IETs, scale=mu_gam_IETs)), round(gamma.ppf(0.999, a=y_gam_IETs, loc=loc_gam_IETs, scale=mu_gam_IETs))
+        if min_x > min(sliding_window_counts):
+            min_x = min(sliding_window_counts)
         x_gam_IETs = range(min_x, max_x+1)
         gamma_pdf = gamma.pdf(x_gam_IETs, a=y_gam_IETs, loc=loc_gam_IETs, scale=mu_gam_IETs)
         axs[model_plot].step(x_gam_IETs, gamma_pdf, linewidth=linewidth, where='post',
