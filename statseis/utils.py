@@ -10,6 +10,8 @@ import pandas as pd
 import pyproj
 from pyproj import Transformer
 import cartopy.feature as cfeature
+import statseis.mc as mc_methods
+import statseis.statseis as statseis
 
 def get_CDF(data):
     data_sorted = np.sort(data)
@@ -161,7 +163,6 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
-
 def calculate_distance_pyproj_vectorized(lon1, lat1, lon2_array, lat2_array, ellipsoid="WGS84"):
     """
     Returns the distance (km) from a point to an array of points using the Pyproj module
@@ -219,3 +220,16 @@ def basic_cartopy_map(ax):
     gl.ylabel_style = {'size': 15}
     gl.xlines = False
     gl.ylines = False
+
+def select_within_box(LON, LAT, df, r):
+    min_box_lon, min_box_lat = add_distance_to_position_pyproj(LON, LAT, -r, -r)
+    max_box_lon, max_box_lat = add_distance_to_position_pyproj(LON, LAT, r, r)
+
+    selections = df.loc[(df['LON']>= min_box_lon) &\
+                        (df['LON']<= max_box_lon) &\
+                        (df['LAT']>= min_box_lat) &\
+                        (df['LAT']<= max_box_lat)
+                        ].copy()
+
+    selections['DISTANCE_TO_MAINSHOCK'] = calculate_distance_pyproj_vectorized(LON, LAT, selections['LON'],  selections['LAT'])
+    return selections

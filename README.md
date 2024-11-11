@@ -1,5 +1,7 @@
 [![DOI](https://zenodo.org/badge/807570243.svg)](https://doi.org/10.5281/zenodo.14051948)
 
+https://pypi.org/project/statseis/  
+
 This module is a work in progress.
 This module contains functions to statistically analyse seismicity (source parameters e.g. time, location, and magnitude).
 Package for importing, processing, and standardising earthquake source parameter data;
