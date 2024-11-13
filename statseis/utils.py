@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import pyproj
 from pyproj import Transformer
-import cartopy.feature as cfeature
 import statseis.mc as mc_methods
 import statseis.statseis as statseis
 
@@ -208,18 +207,6 @@ def add_distance_to_position_pyproj(lon, lat, distance_km_horizontal, distance_k
     new_lon_horizontal, new_lat_horizontal, _ = geod.fwd(lon, lat, 90, distance_km_horizontal * 1000)
     new_lon, new_lat, _ = geod.fwd(new_lon_horizontal, new_lat_horizontal, 0, distance_km_vertical * 1000)
     return new_lon, new_lat
-
-def basic_cartopy_map(ax):
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.LAND, edgecolor='black')
-    ax.add_feature(cfeature.OCEAN, edgecolor='none')
-    gl = ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False, zorder=0)
-    gl.top_labels = False
-    gl.right_labels = False
-    gl.xlabel_style = {'size': 15}
-    gl.ylabel_style = {'size': 15}
-    gl.xlines = False
-    gl.ylines = False
 
 def select_within_box(LON, LAT, df, r):
     min_box_lon, min_box_lat = add_distance_to_position_pyproj(LON, LAT, -r, -r)
