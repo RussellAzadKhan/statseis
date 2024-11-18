@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import pyproj
 from pyproj import Transformer
-import statseis.mc as mc_methods
-import statseis.statseis as statseis
+# import statseis.mc as mc_methods
+# import statseis.statseis as statseis
 
 def get_CDF(data):
     data_sorted = np.sort(data)

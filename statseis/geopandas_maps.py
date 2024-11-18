@@ -12,18 +12,7 @@ from shapely.geometry import Point
 import numpy as np
 from matplotlib.patches import Rectangle
 from pyproj import Transformer
-
-def basic_cartopy_map(ax):
-    ax.add_feature(cfeature.COASTLINE)
-    ax.add_feature(cfeature.LAND, edgecolor='black')
-    ax.add_feature(cfeature.OCEAN, edgecolor='none')
-    gl = ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False, zorder=0)
-    gl.top_labels = False
-    gl.right_labels = False
-    gl.xlabel_style = {'size': 15}
-    gl.ylabel_style = {'size': 15}
-    gl.xlines = False
-    gl.ylines = False
+import statseis.utils as utils
 
 def lat_lon_tick_labels(lon, lat, ax, fontsize=20):
     transformer_4326_to_3857 = Transformer.from_crs("EPSG:4326", "EPSG:3857")
