@@ -12,7 +12,10 @@ from shapely.geometry import Point
 import numpy as np
 from matplotlib.patches import Rectangle
 from pyproj import Transformer
-import statseis.utils as utils
+import utils
+
+plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
+plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
 
 def lat_lon_tick_labels(lon, lat, ax, fontsize=20):
     transformer_4326_to_3857 = Transformer.from_crs("EPSG:4326", "EPSG:3857")

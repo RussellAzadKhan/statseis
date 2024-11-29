@@ -16,8 +16,15 @@ from matplotlib.patches import Rectangle
 from pyproj import Transformer
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import statseis.utils as utils
+import utils
 from matplotlib.patches import Circle
+import statseis
+from pathlib import Path
+import math
+from matplotlib.lines import Line2D
+
+plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
+plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
 
 
 def basic_cartopy_map(ax):
@@ -146,7 +153,7 @@ def plot_local_cat(mainshock, local_cat, earthquake_catalogue, catalogue_name, M
     mainshock_LAT = mainshock.LAT
     mainshock_DATETIME = mainshock.DATETIME
 
-    local_cat = create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
+    local_cat = statseis.create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
 
     min_box_lon, min_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, -box_halfwidth_km, -box_halfwidth_km)
     max_box_lon, max_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, box_halfwidth_km, box_halfwidth_km)
@@ -309,12 +316,12 @@ def plot_local_cat(mainshock, local_cat, earthquake_catalogue, catalogue_name, M
                    color='red', alpha=0.75, ec='white', linewidth=0.25, zorder=2)
     
     if stations is not None:
-        stations = select_within_box(mainshock.LON, mainshock.LAT, df=stations, r=box_halfwidth_km)
+        stations = utils.select_within_box(mainshock.LON, mainshock.LAT, df=stations, r=box_halfwidth_km)
         ax.scatter(stations['LON'], stations['LAT'], ec='white', linewidth=0.25, marker='^', color=plot_color_dict['orange'], zorder=100000)
     ax.set_xlabel('LON')
     ax.set_ylabel('LAT')
 
-    cmap = matplotlib.cm.get_cmap('Spectral')
+    cmap = plt.get_cmap('Spectral')
     rgba = cmap(0.5)
     
     custom_legend_items = [Line2D([], [], color='red', marker='*', markersize=10,
