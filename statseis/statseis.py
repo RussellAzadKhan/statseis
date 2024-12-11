@@ -373,6 +373,11 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
     sliding_window_counts = np.array([len(regular_seismicity_period[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
                                                                     (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window))]) for point in sliding_window_points])
 
+    variance = np.var(sliding_window_counts)
+    q25 = np.percentile(sliding_window_counts, 25)
+    q75 = np.percentile(sliding_window_counts, 75)
+    ESR_median = np.median(sliding_window_counts)
+
     try:
         max_window = max(sliding_window_counts)
     except:
@@ -505,7 +510,11 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
                     'mu_gam_IETs':mu_gam_IETs,
                     'background_rate':background_rate,
                     'cut_off_day':cut_off_day,
-                    'M3_IDs':Wetzler_foreshocks['ID']
+                    'M3_IDs':Wetzler_foreshocks['ID'],
+                    'ESR_median':ESR_median,
+                    'var':variance,
+                    'q25':q25,
+                    'q75':q75
                     }
     
     file_dict = {'local_catalogue':local_catalogue,
