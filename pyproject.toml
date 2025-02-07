@@ -21,7 +21,9 @@ dependencies = [
   "seaborn",
   "cartopy",
   "tqdm",
-  "IPython"]
+  "geopandas",
+  "shapely"
+]
 
 classifiers = [
     "Programming Language :: Python :: 3",
