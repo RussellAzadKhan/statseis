@@ -22,7 +22,8 @@ dependencies = [
   "cartopy",
   "tqdm",
   "geopandas",
-  "shapely"
+  "shapely",
+  "plotly"
 ]
 
 classifiers = [

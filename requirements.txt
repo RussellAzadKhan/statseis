@@ -13,12 +13,14 @@ jedi==0.19.2
 kiwisolver==1.4.8
 matplotlib==3.10.0
 matplotlib-inline==0.1.7
+narwhals==1.25.2
 numpy==2.2.2
 packaging==24.2
 pandas==2.2.3
 parso==0.8.4
 pexpect==4.9.0
 pillow==11.1.0
+plotly==6.0.0
 pluggy==1.5.0
 prompt_toolkit==3.0.50
 ptyprocess==0.7.0
