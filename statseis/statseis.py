@@ -30,9 +30,11 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import utils
-import mc
-import cartopy_maps as cartmaps
+import statseis.utils
+import statseis.mc
+import statseis.cartopy_maps as cartmaps
+
+date = str(dt.datetime.now().date().strftime("%y%m%d"))
 
 # To do
 # Some functions may not work since I made the statseis.mc submodule, update
@@ -136,7 +138,8 @@ def select_mainshocks(earthquake_catalogue,
                       scaling_exclusion_distance = 5,
                       minimum_exclusion_time = 50,
                       scaling_exclusion_time = 25,
-                      station_file=None
+                      station_file=None,
+                      restrict_by_year=True
                       ):
     """
     Select mainshocks from an earthquake catalogue using the following methods:
@@ -282,6 +285,9 @@ def select_mainshocks(earthquake_catalogue,
         selection_list.append(selection)
 
     exclusion_criteria_results['Selection'] = selection_list
+
+    if restrict_by_year==True:
+        exclusion_criteria_results = exclusion_criteria_results.loc[exclusion_criteria_results['DATETIME'] >= earthquake_catalogue.iloc[0]['DATETIME'] + dt.timedelta(days=365)].copy()  
 
     return exclusion_criteria_results
 
@@ -918,3 +924,151 @@ def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc
                 Path(f'../data/{catalogue_name}/Mc_cut/foreshocks/').mkdir(parents=True, exist_ok=True)
                 results_df.to_csv(f'../data/{catalogue_name}/Mc_cut/foreshocks/{save_name}_{date}.csv', index=False)
     return results_df
+
+def ESR_model(mainshock, earthquake_catalogue, local_catalogue,
+              local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=365):
+    
+    mainshock_ID = mainshock.ID
+    mainshock_LON = mainshock.LON
+    mainshock_LAT = mainshock.LAT
+    mainshock_DATETIME = mainshock.DATETIME
+    mainshock_Mc = mainshock.Mc
+    mainshock_MAG = mainshock.MAGNITUDE
+
+    local_catalogue = local_catalogue[(local_catalogue['DATETIME'] < mainshock_DATETIME) &\
+                                        (local_catalogue['DAYS_TO_MAINSHOCK'] < modelling_time_period+foreshock_window) &\
+                                        (local_catalogue['DAYS_TO_MAINSHOCK'] > 0)  &\
+                                        (local_catalogue['DISTANCE_TO_MAINSHOCK'] < local_catalogue_radius) &\
+                                        (local_catalogue['ID'] != mainshock_ID)
+                                        ].copy()
+
+    regular_seismicity_period = local_catalogue[(local_catalogue['DAYS_TO_MAINSHOCK'] >= foreshock_window)].copy()
+    foreshocks = local_catalogue[(local_catalogue['DAYS_TO_MAINSHOCK'] < foreshock_window)].copy()
+
+    n_local_catalogue = len(local_catalogue)
+    n_regular_seismicity_events = len(regular_seismicity_period)
+    n_events_in_foreshock_window = len(foreshocks)
+    foreshock_distance = np.median(foreshocks['DISTANCE_TO_MAINSHOCK'])
+
+    catalogue_start_date = earthquake_catalogue['DATETIME'].iloc[0]
+    time_since_catalogue_start = (mainshock_DATETIME - catalogue_start_date).total_seconds()/3600/24
+    cut_off_day = math.floor(time_since_catalogue_start)
+    if cut_off_day > 365:
+        cut_off_day = 365
+    range_scaler = 100    
+
+    sliding_window_points = np.array(np.arange((-cut_off_day+foreshock_window)*range_scaler, -foreshock_window*range_scaler+1, 1))/range_scaler*-1
+    sliding_window_counts = np.array([len(regular_seismicity_period.loc[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
+                                                                    (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window))]) for point in sliding_window_points])
+    average = np.mean
+    sliding_window_distances = np.array([average(regular_seismicity_period.loc[(regular_seismicity_period['DAYS_TO_MAINSHOCK'] > point) &\
+                                                                    (regular_seismicity_period['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window)), 'DISTANCE_TO_MAINSHOCK']) for point in sliding_window_points])
+
+    ESR_median = np.median(sliding_window_counts)
+    variance = np.var(sliding_window_counts)
+    q25 = np.percentile(sliding_window_counts, 25)
+    q75 = np.percentile(sliding_window_counts, 75)
+    
+    try:
+        distance_probability = len(sliding_window_distances[sliding_window_distances >= foreshock_distance])/len(sliding_window_distances)
+    except:
+        distance_probability = float('nan')
+
+    try:
+        max_window = max(sliding_window_counts)
+    except:
+        max_window = float('nan')
+
+    if n_events_in_foreshock_window > max_window:
+        max_window_method = 0.0
+    elif n_events_in_foreshock_window <= max_window:
+        max_window_method = 1.0
+    else:
+        max_window_method = float('nan')
+
+    if (len(sliding_window_counts)==0) & (n_events_in_foreshock_window > 0):
+        sliding_window_probability = 0.00
+        sliding_window_99CI = float('nan')
+    elif (len(sliding_window_counts)==0) & (n_events_in_foreshock_window == 0):    
+        sliding_window_probability = 1.00
+        sliding_window_99CI = float('nan')
+    else:
+        sliding_window_probability = len(sliding_window_counts[sliding_window_counts >= n_events_in_foreshock_window])/len(sliding_window_counts)
+    # sliding_window_probability = len(list(filter(lambda c: c >= n_events_in_foreshock_window, sliding_window_counts)))/len(sliding_window_counts)
+        sliding_window_99CI = np.percentile(sliding_window_counts,99)
+                
+    results_dict = {'ID':mainshock_ID,
+                    'MAGNITUDE':mainshock_MAG,
+                    'LON':mainshock_LON,
+                    'LAT':mainshock_LAT,
+                    'DATETIME':mainshock_DATETIME,
+                    'DEPTH':mainshock.DEPTH,
+                    'Mc':mainshock_Mc,
+                    'time_since_catalogue_start':time_since_catalogue_start,
+                    'n_regular_seismicity_events':n_regular_seismicity_events,
+                    'n_events_in_foreshock_window':n_events_in_foreshock_window,
+                    'max_20day_rate':max_window,
+                    'ESR':sliding_window_probability,
+                    'ESR_99CI':sliding_window_99CI,
+                    'ESR_median':ESR_median,
+                    'ESD':distance_probability,
+                    'cut_off_day':cut_off_day,
+                    'var':variance,
+                    'q25':q25,
+                    'q75':q75
+                    }
+    
+    sliding_window_points_full = np.array(np.arange((-cut_off_day+foreshock_window)*range_scaler, 1, 1))/range_scaler*-1
+    sliding_window_counts_full = np.array([len(local_catalogue.loc[(local_catalogue['DAYS_TO_MAINSHOCK'] > point) &\
+                                                                    (local_catalogue['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window))]) for point in sliding_window_points_full])
+    average = np.mean
+    sliding_window_distances_full = np.array([average(local_catalogue.loc[(local_catalogue['DAYS_TO_MAINSHOCK'] > point) &\
+                                                                    (local_catalogue['DAYS_TO_MAINSHOCK'] <= (point + foreshock_window)), 'DISTANCE_TO_MAINSHOCK']) for point in sliding_window_points_full])
+
+
+    sliding_window_counts_df = pd.DataFrame({'points':sliding_window_points_full,
+                                             'counts':sliding_window_counts_full,
+                                             'distances':sliding_window_distances_full})
+    
+    file_dict = {'local_catalogue':local_catalogue,
+                #  'local_catalogue_pre_Mc_cutoff':local_catalogue_pre_Mc_cutoff,
+                #  'local_catalogue_below_Mc':local_catalogue_below_Mc,
+                 'foreshocks':foreshocks,
+                #  'foreshocks_below_Mc':foreshocks_below_Mc,
+                 'sliding_window_points':sliding_window_points_full,
+                 'sliding_window_counts':sliding_window_counts_full,
+                 'sliding_window_distances':sliding_window_distances_full
+                 }
+    
+    return results_dict, file_dict, sliding_window_counts_df
+
+def run_ESR_for_mainshock_file(mainshock_file, earthquake_catalog, input_name, mcut=True):
+    data_dict = {}
+    count=0
+    results_dict_list = []
+    for mainshock in tqdm(mainshock_file.itertuples(), total=len(mainshock_file)):
+        count+=1
+        print(f"{mainshock.ID} - {count} of {len(mainshock_file)}")
+        local_cat = create_local_catalogue(mainshock=mainshock, earthquake_catalogue=earthquake_catalog, catalogue_name=input_name, save=False)
+        if mcut==True:
+            local_cat = local_cat.loc[local_cat['MAGNITUDE']>=mainshock.Mc].copy()
+        results_dict, file_dict, window_df = ESR_model(mainshock=mainshock, earthquake_catalogue=earthquake_catalog, local_catalogue=local_cat)
+        data_dict.update({mainshock.ID:{'results_dict':results_dict,
+                                        'file_dict':file_dict,
+                                        'window_df':window_df}})
+        results_dict_list.append(results_dict)
+        if mcut==True:
+            path = f'../data/{input_name}/Mc_cut/ESR'
+        else:
+            path = f'../data/{input_name}/no_Mc_cut/ESR'
+        Path(path).mkdir(exist_ok=True, parents=True)
+        window_df.to_csv(path + f'/{mainshock.ID}.csv', index=False)
+        clear_output(wait=True)
+
+    ESR_results = pd.DataFrame.from_dict(results_dict_list)
+    if mcut==True:
+        save_name = f'{input_name}_mcut_{date}.csv'
+    else:
+        save_name = f'{input_name}_no_mcut_{date}.csv'
+    ESR_results.to_csv(f'../p2_outputs/ESR_results/{save_name}', index=False)
+    return ESR_results

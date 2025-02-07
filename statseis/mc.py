@@ -25,8 +25,9 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import utils
-import statseis
+import statseis.utils
+import statseis.statseis
+import statseis.mc_lilliefors
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
 plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
@@ -73,6 +74,7 @@ def Mc_by_maximum_curvature(mag, mbin=0.1, correction=0.2):
     mag = np.array(mag)
     this_fmd = freq_mag_dist(mag, mbin) # uses the fmd distribution (a previous function)
     maxc = this_fmd[0][np.argmax(this_fmd[1])] # Mag bin with highest no. of events
+    print(f"with a correction of: {correction}")
     return maxc + correction 
  
 def Mc_by_goodness_of_fit(mag, mbin=0.1):
@@ -283,6 +285,76 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
     mainshocks_file[f'b_Maxc_50'] = Maxc_b
     mainshocks_file[f'n_for_Mc_50'] = n_local_cat
     mainshocks_file[f'radii_50'] = radii
+    # mainshocks_file[f'Mbass_{max_r}'] = Mbass
+    # mainshocks_file[f'b_Mbass_{max_r}'] = Mbass_b
+    # mainshocks_file[f'Mc'] = Mbass
+    # mainshocks_file[f'Maxc_{max_r}'] = Maxc
+    # mainshocks_file[f'b_Maxc_{max_r}'] = Maxc_b
+    # mainshocks_file[f'n_for_Mc_{max_r}'] = n_local_cat
+    # mainshocks_file[f'radii_{max_r}'] = radii
+    return mainshocks_file
+
+def Mc_by_Lilliefors(mag, n_repeats=50, Mstart=0.0):
+    lill = mc_lilliefors.McLilliefors(mag)
+    lill.calc_testdistr_mcutoff(
+        n_repeats=n_repeats,  # number of iterations for the random noise
+        Mstart=Mstart,  # lowest magnitude for which to perform the test
+        # log=False,  # whether to show anythe progress bar
+    )
+    Mc = lill.estimate_Mc_expon_test()
+    return Mc
+
+def get_Mcs_ensemble(mainshocks_file, earthquake_catalogue, catalogue_name,
+                      start_radius=10, inc=5, max_r=50, min_n=400, Lilliefors=False):
+    """
+    Calculate Mc using b-value stability (Mbass) and maximumum curvature (Maxc) around mainshock epicenters.
+    """
+    date = str(dt.datetime.now().date().strftime("%y%m%d"))
+    Mbass = []
+    Maxc = []
+    n_local_cat = []
+    radii = []
+    Mbass_b = []
+    Maxc_b = []
+    Gft_Mc = []
+    Lilliefors_Mc_list = []
+    Lilliefors_Mc_b = []
+    i = 1
+    for mainshock in tqdm(mainshocks_file.itertuples(), total=len(mainshocks_file)):
+        # print(f"{catalogue_name}")
+        # print(f"{i} of {len(mainshocks_file)} mainshocks")
+        radius = start_radius
+        local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+        while len(local_cat)<min_n:
+            if radius <max_r:
+                radius+=inc
+                local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+            elif radius>=max_r:
+                break
+        if Lilliefors==True:
+            McLil = Mc_by_Lilliefors(local_cat['MAGNITUDE'])
+            Lilliefors_Mc_list.append(McLil)
+            Lilliefors_Mc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=McLil)[1])
+        Mbass_mc = get_mbs(np.array(local_cat['MAGNITUDE']), mbin=0.1)[0]
+        Mbass.append(Mbass_mc)
+        Maxc_mc = get_maxc(local_cat['MAGNITUDE'], mbin=0.1)+0.2
+        Maxc.append(Maxc_mc)
+        n_local_cat.append(len(local_cat))
+        radii.append(radius)
+        Mbass_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=Mbass_mc)[1])
+        Maxc_b.append(b_est(np.array(local_cat['MAGNITUDE']), mbin=0.1, mc=Maxc_mc)[1])
+        i+=1
+        clear_output(wait=True)
+    if Lilliefors==True:
+        mainshocks_file[f'Mc_lil'] = Lilliefors_Mc_list
+        mainshocks_file[f'b_lil'] = Lilliefors_Mc_b
+    mainshocks_file[f'Mc_mbs'] = Mbass
+    mainshocks_file[f'b_mbs'] = Mbass_b
+    # mainshocks_file[f'Mc'] = Mbass
+    mainshocks_file[f'Mc_maxc'] = Maxc
+    mainshocks_file[f'b_maxc'] = Maxc_b
+    mainshocks_file[f'n_for_Mc'] = n_local_cat
+    mainshocks_file[f'radii'] = radii
     # mainshocks_file[f'Mbass_{max_r}'] = Mbass
     # mainshocks_file[f'b_Mbass_{max_r}'] = Mbass_b
     # mainshocks_file[f'Mc'] = Mbass

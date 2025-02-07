@@ -11,9 +11,17 @@ authors = [
 description = "Package to statistically analyse seismicity"
 readme = "README.md"
 requires-python = ">=3.8"
-dependencies = ["datetime", "math", "os", "pathlib", "matplotlib", "numpy",
- "pandas", "scipy", "pyproj", "IPython", "string", "seaborn", "cartopy", "shutil",
-  "tqdm", "collections", "shutil"]
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "pandas",
+  "scipy",
+  "pyproj",
+  "IPython",
+  "seaborn",
+  "cartopy",
+  "tqdm",
+  "IPython"]
 
 classifiers = [
     "Programming Language :: Python :: 3",

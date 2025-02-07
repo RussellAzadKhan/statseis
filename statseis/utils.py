@@ -15,6 +15,20 @@ from pyproj import Transformer
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
 plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
 
+def no_nans_or_infs(res_file, metric=None):
+    if isinstance(res_file, pd.DataFrame):
+        if metric is None:
+            raise ValueError("Metric must be specified for DataFrame input")
+        res_file = res_file.loc[(~res_file[metric].isna()) & (res_file[metric] != np.inf)].copy()
+    
+    elif isinstance(res_file, (pd.Series, np.ndarray)):
+        res_file = res_file[~(np.isnan(res_file) | np.isinf(res_file))].copy()
+    
+    else:
+        raise TypeError("Input must be a Pandas DataFrame, Series, or NumPy array")
+    
+    return res_file
+
 def get_CDF(data):
     data_sorted = np.sort(data)
     cdf = np.arange(1, len(data_sorted) + 1) / len(data_sorted)
@@ -69,7 +83,7 @@ def string_to_datetime(list_of_datetimes, format='%Y-%m-%d %H:%M:%S'):
     return Datetime
 
 
-def string_to_datetime_df(dataframe, format='%Y-%m-%d %H:%M:%S'):
+def string_to_datetime_df(dataframe, format='%Y-%m-%d %H:%M:%S.%f'):
     """
     Find DATETIME column in df and change to datetime objects
     """
@@ -157,13 +171,16 @@ def min_max_median_mean(numbers):
     return min, max, median, mean
 
 
-def find_nearest(array, value):
+def find_nearest(array, value, index=False):
     """
     Returns the nearest value in an array to its argument.
     """
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
-    return array[idx]
+    if index!=False:
+        return idx
+    else:
+        return array[idx]
 
 def calculate_distance_pyproj_vectorized(lon1, lat1, lon2_array, lat2_array, ellipsoid="WGS84"):
     """
@@ -223,3 +240,11 @@ def select_within_box(LON, LAT, df, r):
 
     selections['DISTANCE_TO_MAINSHOCK'] = calculate_distance_pyproj_vectorized(LON, LAT, selections['LON'],  selections['LAT'])
     return selections
+
+def read_in_convert_datetime(path):
+    """
+    Read in a CSV of source parameters with datetimes (not strings).
+    """
+    df = pd.read_csv(path)
+    string_to_datetime_df(df, format='%Y-%m-%d %H:%M:%S.%f')
+    return df
