@@ -30,9 +30,9 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import statseis.utils
-import statseis.mc
-import statseis.cartopy_maps as cartmaps
+import utils
+import mc
+import cartopy_maps as cartmaps
 
 date = str(dt.datetime.now().date().strftime("%y%m%d"))
 
@@ -1072,3 +1072,8 @@ def run_ESR_for_mainshock_file(mainshock_file, earthquake_catalog, input_name, m
         save_name = f'{input_name}_no_mcut_{date}.csv'
     ESR_results.to_csv(f'../p2_outputs/ESR_results/{save_name}', index=False)
     return ESR_results
+
+def foreshock_rate(df):
+    n_foreshocks = len(df.loc[df['ESR']<0.01])
+    n_total = len(df)
+    return n_foreshocks/n_total, n_foreshocks, n_total
