@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>statseis.mc_lilliefors &#8212; statseis 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=9e72d6e9"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">statseis 0.0.1-alpha documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">statseis.mc_lilliefors</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for statseis.mc_lilliefors</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># pylint: disable=invalid-name</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Routines for performing the Lilliefors test for exponentiality.</span>
+
+<span class="sd">The Lilliefors test is performed as a function of lower magnitude cutoff. The provided</span>
+<span class="sd">p-value is eventually used to estimate a Mc-Lilliefors, which complies with the</span>
+<span class="sd">exponential Gutenberg–Richter relation to obtain a meaningful b-value.</span>
+
+<span class="sd">The accompanied Jupyter notebook demonstrates the use of the class below.</span>
+
+<span class="sd">Associated publication:</span>
+<span class="sd">    Herrmann, M. and W. Marzocchi (2020). &quot;Inconsistencies and Lurking Pitfalls in the</span>
+<span class="sd">        Magnitude–Frequency Distribution of High-Resolution Earthquake Catalogs&quot;.</span>
+<span class="sd">        Seismological Research Letters 92(2A). doi: 10.1785/0220200337</span>
+
+<span class="sd">:copyright:</span>
+<span class="sd">    2020 Marcus Herrmann, Università degli Studi di Napoli &#39;Federico II&#39;</span>
+<span class="sd">:license:</span>
+<span class="sd">    European Union Public Licence (EUPL-1.2-or-later)</span>
+<span class="sd">    (https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># ------------------------------------------------------------------------------</span>
+<span class="c1"># Licensed under the EUPL, Version 1.2 or – as soon they will be approved by the</span>
+<span class="c1"># European Commission – subsequent versions of the EUPL (the &quot;Licence&quot;);</span>
+<span class="c1"># You may not use this work except in compliance with the Licence.</span>
+<span class="c1"># You may obtain a copy of the Licence at:</span>
+<span class="c1">#    https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software distributed</span>
+<span class="c1"># under the Licence is distributed on an &quot;AS IS&quot; basis, WITHOUT WARRANTIES OR</span>
+<span class="c1"># CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the Licence for the specific language governing permissions and limitations</span>
+<span class="c1"># under the Licence.</span>
+<span class="c1"># ------------------------------------------------------------------------------</span>
+
+
+<span class="c1"># Python built-in modules (Standard library)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="c1"># Helpers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># Scientific</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">statsmodels.api</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sm</span>
+
+<span class="c1"># # # Plotting</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pco</span>
+
+
+<div class="viewcode-block" id="McLilliefors">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">McLilliefors</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to perform the Lilliefors test for exponentiality (as function of Mc).</span>
+
+<span class="sd">    Note: this class is related and compatible to the FMD class in</span>
+<span class="sd">    https://gitlab.seismo.ethz.ch/microEQ/TM/blob/master/TM/analysis.py#L910 ,</span>
+<span class="sd">    which also supports b-value estimation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mags</span><span class="p">,</span> <span class="n">signif_lev</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mags : sequence of floats</span>
+<span class="sd">            The magnitude vector of the catalog.</span>
+<span class="sd">        signif_lev : float, optional</span>
+<span class="sd">            The significance level, α, used for null hypothesis testing, by default 0.05.</span>
+<span class="sd">        log_level : int, optional</span>
+<span class="sd">            The default logging level, by default logging.INFO (20).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_mags</span><span class="p">(</span><span class="n">mags</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Estimate original binning of the catalog</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_binning</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Detected magnitude binning: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">signif_lev</span> <span class="o">=</span> <span class="n">signif_lev</span>
+
+        <span class="c1"># Default stepping in case of continuous magnitudes (self.mstep == 0)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mstep_default</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="McLilliefors.update_mags">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.update_mags">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_mags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mags</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the magnitude vector.</span>
+
+<span class="sd">        Also recalculates `n_ev` property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If it&#39;s a pandas Series, extract the index</span>
+        <span class="c1"># (can be used for comparing whether it&#39;s the same data)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mags</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mags_index</span> <span class="o">=</span> <span class="n">mags</span><span class="o">.</span><span class="n">index</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mags</span> <span class="o">=</span> <span class="n">mags</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mags_index</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mags</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">)]</span>  <span class="c1"># Remove NaN magnitudes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: No magnitudes present. &quot;</span>
+                                <span class="s2">&quot;Will return NaN results.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">minmag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxmag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="c1"># (Re)calculate magitude range for proper bin generation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">minmag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxmag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_binning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine binning of magnitudes (via Greatest Common Divisor).</span>
+
+<span class="sd">        Note: doesn&#39;t account for an absolute shift in the binning</span>
+<span class="sd">              (then the catalog is shit anyway)</span>
+<span class="sd">              (e.g., [1.0, 1.4, 1.8, 3.0] will result in 0.2 instead of 0.4)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># -- Approach via greatest common divisor</span>
+        <span class="c1"># (works also for very small catalogs, or with high-res binning)</span>
+
+        <span class="c1"># Take a small random sample</span>
+        <span class="n">mags</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+        <span class="c1"># Make ints using length of decimal place (this does NOT account for a shift)</span>
+        <span class="n">decis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">mags</span><span class="p">])</span>  <span class="c1"># this is sensitive to float precision</span>
+        <span class="n">magm</span> <span class="o">=</span> <span class="p">(</span><span class="n">mags</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="n">decis</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>  <span class="c1"># speedup w/ numpy</span>
+
+        <span class="c1"># Make math.gcd() to work with lists / arrays; How? Iterative over it!</span>
+        <span class="n">gcd</span> <span class="o">=</span> <span class="n">magm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">magm</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">gcd</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">gcd</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+        <span class="n">orig_bin</span> <span class="o">=</span> <span class="n">gcd</span> <span class="o">/</span> <span class="mi">10</span><span class="o">**</span><span class="n">decis</span>
+
+        <span class="c1"># -- Additional check (via apparent magnitude differences)</span>
+        <span class="c1"># Is needed for</span>
+        <span class="c1">#   1. robust binning estimate when magnitude binning is weird &amp; has a shift</span>
+        <span class="c1">#      (e.g., after converting of binned magnitudes)</span>
+        <span class="c1">#   2. detecting continuous magnitudes</span>
+        <span class="c1"># Problem: this detection is only robust if plenty of magnitudes are present</span>
+
+        <span class="k">if</span> <span class="n">decis</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># equiv: if orig_bin &lt; 1e-3:</span>
+
+            <span class="c1"># Obtain smallest apparent magnitude difference (i.e. binning)</span>
+            <span class="n">uniqmagsortdiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">)))</span>
+            <span class="n">mindiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">uniqmagsortdiff</span><span class="p">)</span>  <span class="c1"># (includes precision error)</span>
+
+            <span class="c1"># Round mindiff to precision [https://stackoverflow.com/a/8119014]</span>
+            <span class="n">resolution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">resolution</span>
+            <span class="n">orig_bin</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">mindiff</span> <span class="o">/</span> <span class="n">resolution</span><span class="p">)</span> <span class="o">*</span> <span class="n">resolution</span>
+
+            <span class="c1"># For continuous magnitudes, orig_bin is not always 0 (but very small)</span>
+            <span class="c1">#   --&gt; force to 0</span>
+            <span class="c1"># if orig_bin &lt; 1e-5:  # this threshold requires at least 1000 events to be robust</span>
+            <span class="k">if</span> <span class="n">orig_bin</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>  <span class="c1"># better: if orig_bin still very small; 100 events enough</span>
+                <span class="n">orig_bin</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">orig_bin</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mbin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the magnitude bins for a given binning `mbin`.</span>
+
+<span class="sd">        If `mbin` is not specified, it will default to the one used for</span>
+<span class="sd">        estimating Mc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">mbin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mbin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span>
+
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minmag</span> <span class="o">/</span> <span class="n">mbin</span><span class="p">)</span> <span class="o">*</span> <span class="n">mbin</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">maxmag</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mbin</span><span class="p">,</span> <span class="n">mbin</span><span class="p">)</span>  <span class="c1"># give double bin margin</span>
+        <span class="n">binEdges</span> <span class="o">=</span> <span class="n">bins</span> <span class="o">-</span> <span class="n">mbin</span> <span class="o">/</span> <span class="mi">2</span>   <span class="c1"># to create correct bin edges</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># cut margin away again</span>
+
+        <span class="k">return</span> <span class="n">bins</span><span class="p">,</span> <span class="n">binEdges</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_correct_to_binning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">mbin</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Correct a magnitude bin to a sensible value.</span>
+
+<span class="sd">        It is of SUPER IMPORTANCE to appropriately round the Mc estimate to a multiple</span>
+<span class="sd">        of the binning without precision errors (e.g. 1.0 instead of 1.000000000000001).</span>
+<span class="sd">        These precision errors would otherwise affect the GR fit quite considerably,</span>
+<span class="sd">        especially when the original magnitudes have half the binning used for GR-fitting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">val</span>
+
+        <span class="n">imbin</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">mbin</span>  <span class="c1"># to eventually create an integer</span>
+        <span class="k">if</span> <span class="n">imbin</span><span class="o">.</span><span class="n">is_integer</span><span class="p">():</span>
+            <span class="c1"># check if binning as a fraction like `1 / natural number`</span>
+            <span class="c1"># Correct Mc to binning &amp; AVOID PRECISION ERRORS</span>
+            <span class="n">val_bin</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">val</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">imbin</span><span class="p">))</span> <span class="o">/</span> <span class="nb">int</span><span class="p">(</span><span class="n">imbin</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># do best if it&#39;s not a &quot;natural fraction&quot;</span>
+            <span class="c1"># --&gt; no guarantee to avoid precision errors</span>
+            <span class="n">val_bin</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">val</span> <span class="o">/</span> <span class="n">mbin</span><span class="p">)</span> <span class="o">*</span> <span class="n">mbin</span>
+
+        <span class="k">return</span> <span class="n">val_bin</span>
+
+<div class="viewcode-block" id="McLilliefors.lilliefors_test">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.lilliefors_test">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lilliefors_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform a Lilliefors hypothesis test for exponentiality.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mags : 1-D array_like, optional</span>
+<span class="sd">            The magnitude set. Defaults to the magnitude set of this FMD object.</span>
+<span class="sd">        log : bool, optional</span>
+<span class="sd">            Whether to output the test results to stdout, by default True.</span>
+<span class="sd">            Only useful to switch off for batch-processing tests.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            p-value of the hypothesis test.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">mags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mags</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">diagnostic</span><span class="o">.</span><span class="n">lilliefors</span><span class="p">(</span><span class="n">mags</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="s1">&#39;exp&#39;</span><span class="p">,</span> <span class="n">pvalmethod</span><span class="o">=</span><span class="s1">&#39;table&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Lilliefors test :: test statistic: </span><span class="si">%.3f</span><span class="s2">,  p-value: </span><span class="si">%.3f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_mags_for_exponential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Mc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare magnitudes for exponential distribution.</span>
+
+<span class="sd">        Steps:</span>
+<span class="sd">            - apply noise to each magnitude within bin size (i.e. make `mags` continuous)</span>
+<span class="sd">            - shift magnitudes by the completeness magnitude</span>
+<span class="sd">              (specifically, by the start, i.e. left border, of this magnitude bin)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mags : 1-D array_like, optional</span>
+<span class="sd">            The magnitude set. Defaults to the magnitude set of this FMD object.</span>
+<span class="sd">        Mc : float, optional</span>
+<span class="sd">            The magnitude of completeness, or magnitude cutoff level.</span>
+<span class="sd">            Defaults to the value calculated with .estimate_Mc(), otherwise returns None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        1-D np.ndarray</span>
+<span class="sd">            The prepared magnitudes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">mags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span>
+
+        <span class="k">if</span> <span class="n">Mc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Mc&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">Mc</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Provide Mc or estimate it.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add noise</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+
+            <span class="c1"># Generate noise</span>
+            <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">mags</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+
+            <span class="c1"># Sample uniform in magnitude</span>
+            <span class="c1"># Scale noise to bin size (within ±bin size)</span>
+            <span class="n">noise_scaled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">*</span> <span class="n">noise</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">mags_noise</span> <span class="o">=</span> <span class="n">mags</span> <span class="o">+</span> <span class="n">noise_scaled</span>
+
+            <span class="c1"># Assert that no values are equal (i.e. no duplicates)</span>
+            <span class="c1"># (otherwise generate a new noise vector)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">mags_noise</span><span class="p">))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">mags</span><span class="p">):</span>
+                <span class="n">mags</span> <span class="o">=</span> <span class="n">mags_noise</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Shift Mc bin start to zero</span>
+        <span class="n">mags</span> <span class="o">-=</span> <span class="n">Mc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="c1"># For sanity: treat negative values</span>
+        <span class="c1">#  (can happen when `noise_scaled ~= -self.mbin_orig / 2` &amp; mags not rounded to binning</span>
+        <span class="c1">#   --&gt; caused by floating point precision; will be around ~-e-08)</span>
+        <span class="n">mags_neg</span> <span class="o">=</span> <span class="n">mags</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mags_neg</span><span class="p">):</span>
+            <span class="n">mags</span><span class="p">[</span><span class="n">mags_neg</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">mags</span><span class="p">[</span><span class="n">mags_neg</span><span class="p">]</span>  <span class="c1"># negate</span>
+
+        <span class="k">return</span> <span class="n">mags</span>
+
+<div class="viewcode-block" id="McLilliefors.get_test_distribution">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.get_test_distribution">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_test_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Mc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_repeats</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform a test several times and return its distribution.</span>
+
+<span class="sd">        Every repetition is performed with a newly sampled random noise that is</span>
+<span class="sd">        added to the magnitudes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">mags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span>
+
+        <span class="k">if</span> <span class="n">Mc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Mc&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">Mc</span> <span class="ow">is</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: Provide Mc, estimate it, or fit GR relation.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_repeats</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span><span class="p">:</span>
+                <span class="c1"># binned magnitudes</span>
+                <span class="n">_mags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_mags_for_exponential</span><span class="p">(</span><span class="n">mags</span><span class="p">,</span> <span class="n">Mc</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># continuous magnitudes</span>
+                <span class="n">_mags</span> <span class="o">=</span> <span class="n">mags</span> <span class="o">-</span> <span class="n">Mc</span>
+
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lilliefors_test</span><span class="p">(</span><span class="n">_mags</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="McLilliefors.calc_testdistr_mcutoff">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.calc_testdistr_mcutoff">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calc_testdistr_mcutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_repeats</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">Mstart</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get test distribution (e.g., *p*-value) as function of magnitude cutoff.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_repeats : int, optional</span>
+<span class="sd">            Number of random initializations of noise added to mangitudes (which</span>
+<span class="sd">            make the discrete magnitudes continuous), by default 100.</span>
+<span class="sd">        Mstart : float, optional</span>
+<span class="sd">            Overwrite minimum magnitude from where to start, by default starts at</span>
+<span class="sd">            smallest magnitude present in the set.</span>
+<span class="sd">        log : bool, optional</span>
+<span class="sd">            Whether to log or not to log, by default `True`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;testdistr&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]),</span>
+                <span class="s1">&#39;mbins&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">],</span>
+                <span class="s1">&#39;N_samps&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;    Couldn&#39;t determine M_cutoff (no magnitudes present).&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Set magnitude stepping</span>
+        <span class="c1"># Note: don&#39;t allow custom stepping, as it will cause an inconsistency w/</span>
+        <span class="c1">#       the shifting by Mc bin to zero in `self._prepare_mags_for_exponential()`</span>
+        <span class="c1">#       --&gt; always use original magnitude binning as stepping</span>
+        <span class="n">mstep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span>
+        <span class="c1"># Note: In case of continuous magnitudes (mstep == 0), fall back to a managable stepping</span>
+        <span class="c1">#       (but keep mstep at 0 for having `_mcut - mstep / 2` == `_mcut` below)</span>
+        <span class="n">mbins</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_bins</span><span class="p">(</span><span class="n">mstep</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstep_default</span><span class="p">)</span>
+
+        <span class="c1"># For continuous mags, do only one iteration (no randomness needed)</span>
+        <span class="n">n_repeats</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">n_repeats</span>
+
+        <span class="k">if</span> <span class="n">Mstart</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mbins</span> <span class="o">=</span> <span class="n">mbins</span><span class="p">[</span><span class="n">mbins</span> <span class="o">&gt;=</span> <span class="n">Mstart</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">log</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting test distributions (</span><span class="si">%d</span><span class="s2">x) for </span><span class="si">%s</span><span class="s2"> magnitude cutoffs...&quot;</span><span class="p">,</span>
+                             <span class="n">n_repeats</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">mbins</span><span class="p">))</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">N_samps</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># store number of samples</span>
+        <span class="k">for</span> <span class="n">_mcut</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">mbins</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">disable</span><span class="o">=</span><span class="ow">not</span> <span class="n">log</span><span class="p">):</span>
+
+            <span class="c1"># Extract corresponding magnitudes</span>
+            <span class="n">mags_cut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mags</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span> <span class="o">&gt;=</span> <span class="n">_mcut</span> <span class="o">-</span> <span class="n">mstep</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># `/ 2`: consider whole bin</span>
+            <span class="n">N_samps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mags_cut</span><span class="p">))</span>
+
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_test_distribution</span><span class="p">(</span><span class="n">mags_cut</span><span class="p">,</span> <span class="n">_mcut</span><span class="p">,</span> <span class="n">n_repeats</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;testdistr&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">),</span>
+            <span class="s1">&#39;mbins&#39;</span><span class="p">:</span> <span class="n">mbins</span><span class="p">,</span>
+            <span class="s1">&#39;N_samps&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">N_samps</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="McLilliefors.plot_testdist_expon_mcutoff">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.plot_testdist_expon_mcutoff">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot_testdist_expon_mcutoff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#000000&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">legendgroup</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                    <span class="n">asfig</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot test distribution (e.g., *p*-value) as function of magnitude cutoff.</span>
+
+<span class="sd">        Plots the mean, min/max, and +/- std curves.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        color : str, optional</span>
+<span class="sd">            The color to use, by default &#39;#000000&#39; (black).</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            The name in the legend entry, by default None.</span>
+<span class="sd">        legendgroup : bool, int, or string, optional</span>
+<span class="sd">            Whether to group all curves into one group, by default None.</span>
+<span class="sd">            And if yes, in which (needs to be specified as an integer, i.e. the group id).</span>
+<span class="sd">        asfig : bool, optional</span>
+<span class="sd">            Whether to return a plotly Figure instance (`True`), or only a dict (`False`).</span>
+<span class="sd">            Defaults to `True`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plotly.graph_objs._figure.Figure or dict</span>
+<span class="sd">            plotly Figure instance or a dictionary to be converted into a plotly Figure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Note: need to generate test distribution first</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: test distribution was not generated yet. &quot;</span>
+                                <span class="s2">&quot;Executing .calc_testdistr_mcutoff() with default parameters&quot;</span>
+                                <span class="s2">&quot; (Lilliefors test with 100 repeats over the whole M range).&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_testdistr_mcutoff</span><span class="p">()</span>
+
+        <span class="c1"># Convert to plotly color that can be alpha-ized</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">pco</span><span class="o">.</span><span class="n">validate_colors</span><span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="s1">&#39;rgb&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># -- Get distributions</span>
+
+        <span class="n">res</span><span class="p">,</span> <span class="n">mbins</span><span class="p">,</span> <span class="n">N_samps</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                               <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;testdistr&#39;</span><span class="p">,</span> <span class="s1">&#39;mbins&#39;</span><span class="p">,</span> <span class="s1">&#39;N_samps&#39;</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span><span class="p">:</span>
+            <span class="n">res_means</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">res_std</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">res_min</span><span class="p">,</span> <span class="n">res_max</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">res</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res_means</span><span class="p">,</span> <span class="n">res_std</span><span class="p">,</span> <span class="n">res_min</span><span class="p">,</span> <span class="n">res_max</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]),</span> <span class="p">)</span>
+
+        <span class="c1"># -- Plot</span>
+
+        <span class="n">color_alpha_std</span> <span class="o">=</span> <span class="s1">&#39;rgba&#39;</span> <span class="o">+</span> <span class="n">color</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;,0.3)&#39;</span>
+        <span class="n">color_alpha_extr</span> <span class="o">=</span> <span class="s1">&#39;rgba&#39;</span> <span class="o">+</span> <span class="n">color</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;,0.15)&#39;</span>
+
+        <span class="n">legendgroup</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">legendgroup</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">legendgroup</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="c1"># Mean</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">mbins</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">res_means</span><span class="p">,</span>
+                <span class="n">line_color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span> <span class="k">else</span> <span class="s1">&#39;&lt;b&gt;&#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;&lt;/b&gt;&#39;</span><span class="p">,</span>
+                <span class="n">legendgroup</span><span class="o">=</span><span class="n">legendgroup</span><span class="p">,</span>
+                <span class="n">meta</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">res_std</span><span class="p">,</span> <span class="n">res_min</span><span class="p">,</span> <span class="n">res_max</span><span class="p">,</span> <span class="n">N_samps</span><span class="p">)),</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;&lt;i&gt;M&lt;/i&gt;%</span><span class="si">{x}</span><span class="s2">: &lt;i&gt;p&lt;/i&gt; = &lt;b&gt;%</span><span class="si">{y:.3g}</span><span class="s2">&lt;/b&gt; ± %</span><span class="si">{meta[0]:.3g}</span><span class="s2">&lt;br&gt;&quot;</span>
+                    <span class="s2">&quot;&lt;i&gt;p&lt;/i&gt;&lt;sub&gt;min/max&lt;/sub&gt; = [%</span><span class="si">{meta[1]:.3g}</span><span class="s2">, %</span><span class="si">{meta[2]:.3g}</span><span class="s2">]&lt;br&gt;&quot;</span>
+                    <span class="s2">&quot;N = %</span><span class="si">{meta[3]}</span><span class="s2">&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+
+            <span class="c1"># +/- std</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">mbins</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">res_means</span> <span class="o">-</span> <span class="n">res_std</span><span class="p">,</span>
+                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;1σ&#39;</span><span class="p">,</span> <span class="n">legendgroup</span><span class="o">=</span><span class="n">legendgroup</span><span class="p">,</span> <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">hoverinfo</span><span class="o">=</span><span class="s1">&#39;skip&#39;</span><span class="p">),</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">mbins</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">res_means</span> <span class="o">+</span> <span class="n">res_std</span><span class="p">,</span>
+                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;tonexty&#39;</span><span class="p">,</span> <span class="n">fillcolor</span><span class="o">=</span><span class="n">color_alpha_std</span><span class="p">,</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;1σ&#39;</span><span class="p">,</span> <span class="n">legendgroup</span><span class="o">=</span><span class="n">legendgroup</span><span class="p">,</span> <span class="n">hoverinfo</span><span class="o">=</span><span class="s1">&#39;skip&#39;</span><span class="p">),</span>
+
+            <span class="c1"># min/max</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">mbins</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">res_min</span><span class="p">,</span>
+                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;lines&#39;</span><span class="p">,</span> <span class="n">line_width</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;min / max&#39;</span><span class="p">,</span> <span class="n">legendgroup</span><span class="o">=</span><span class="n">legendgroup</span><span class="p">,</span> <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">hoverinfo</span><span class="o">=</span><span class="s1">&#39;skip&#39;</span><span class="p">),</span>
+            <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">mbins</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">res_max</span><span class="p">,</span>
+                       <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s1">&#39;tonexty&#39;</span><span class="p">,</span> <span class="n">fillcolor</span><span class="o">=</span><span class="n">color_alpha_extr</span><span class="p">,</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;min / max&#39;</span><span class="p">,</span> <span class="n">legendgroup</span><span class="o">=</span><span class="n">legendgroup</span><span class="p">,</span> <span class="n">hoverinfo</span><span class="o">=</span><span class="s1">&#39;skip&#39;</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="n">layout</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>  <span class="c1"># go.Layout(</span>
+            <span class="n">shapes</span><span class="o">=</span><span class="p">[</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;line&#39;</span><span class="p">,</span>
+                     <span class="n">x0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">xref</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signif_lev</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signif_lev</span><span class="p">,</span>
+                     <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;#D62728&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">layer</span><span class="o">=</span><span class="s1">&#39;below&#39;</span><span class="p">),</span>
+                <span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;rect&#39;</span><span class="p">,</span>
+                     <span class="n">x0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">xref</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">signif_lev</span><span class="p">,</span>
+                     <span class="n">fillcolor</span><span class="o">=</span><span class="s1">&#39;#D62728&#39;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="s1">&#39;below&#39;</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">legend_traceorder</span><span class="o">=</span><span class="s1">&#39;grouped&#39;</span><span class="p">,</span>
+            <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Lilliefors &lt;i&gt;p&lt;/i&gt;-value&quot;</span><span class="p">,</span> <span class="n">standoff</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+                <span class="n">showgrid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),),</span>
+            <span class="n">xaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;&lt;i&gt;M&lt;/i&gt;&lt;sub&gt;c&lt;/sub&gt;&quot;</span><span class="p">,</span> <span class="n">standoff</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># formerly &quot;M_cutoff&quot;</span>
+                <span class="n">showgrid</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">dtick</span><span class="o">=</span><span class="mi">1</span><span class="p">,),</span>
+            <span class="n">height</span><span class="o">=</span><span class="mi">380</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;l&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">asfig</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">layout</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span> <span class="s1">&#39;layout&#39;</span><span class="p">:</span> <span class="n">layout</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="McLilliefors.estimate_Mc_expon_test">
+<a class="viewcode-back" href="../../statseis.html#statseis.mc_lilliefors.McLilliefors.estimate_Mc_expon_test">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate_Mc_expon_test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mbin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the magnitude of completeness using Lilliefors test of exponentiality.</span>
+
+<span class="sd">        This means: the Mc is determined as the lowest magnitude where the p-value is above</span>
+<span class="sd">                    the significance level, i.e. where the exponential assumption is not rejected.</span>
+<span class="sd">        Here we will generally use the average p-value among several realizations of the random</span>
+<span class="sd">        noise.</span>
+<span class="sd">        For robustness, this average p-value must exceed the significance level for at least</span>
+<span class="sd">        0.05 magnitude units, in which case the first exceedance, i.e., the smallest magnitude bin,</span>
+<span class="sd">        yields the eventual Mc-Lilliefors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mbin : float, optional</span>
+<span class="sd">            Overwrite the &quot;binning&quot;. Defaults to the magnitude binning.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            The estimated magnitude of completeness</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: Test distributions were not yet calculated; &quot;</span>
+                                <span class="s2">&quot;do so with .calc_testdistr_mcutoff().&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;Mc&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;n_compl&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_ev</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># Determine the test statistic reference (that has to be above the significance level)</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span><span class="p">[</span><span class="s1">&#39;testdistr&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">mean</span>  <span class="c1"># preferred by Warner (std depends too much on tail,</span>
+                    <span class="c1"># i.e. No. of random iterations --&gt; mean is representative)</span>
+
+        <span class="c1"># Determine elements above the sign. level</span>
+        <span class="n">grarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">signif_lev</span><span class="p">)</span>
+
+        <span class="c1"># Determine index of first element above sign. level</span>
+        <span class="n">indxgr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">grarr</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">indxgr</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="n">indxgr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Extra: only if at least x values are above the level --&gt; ignore single exceedances</span>
+        <span class="c1">#       --&gt; then, take the first element of such a &quot;x+ group&quot;</span>
+        <span class="c1"># Note: In case of continuous magnitudes (mbin_orig == 0), fall back to the default</span>
+        <span class="c1">#       stepping to avoid ZeroDivisionError</span>
+        <span class="n">mstep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstep_default</span>
+        <span class="n">min_n_exceed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">/</span> <span class="n">mstep</span><span class="p">))</span>  <span class="c1"># at least 0.05 of magnitude</span>
+        <span class="n">indxgr_split</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">indxgr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">indxgr</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">indxgr_split</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">min_n_exceed</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Finally, get Mc</span>
+        <span class="c1"># Note: In case of continuous magnitudes, fall back to the default</span>
+        <span class="c1">#       stepping to avoid ZeroDivisionError (here, also 1-e6 would do)</span>
+        <span class="n">Mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">testdistr_mcutoff</span><span class="p">[</span><span class="s1">&#39;mbins&#39;</span><span class="p">][</span><span class="n">indx</span><span class="p">]</span>
+        <span class="n">mbin</span> <span class="o">=</span> <span class="n">mbin</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mstep_default</span>
+        <span class="n">Mc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_correct_to_binning</span><span class="p">(</span><span class="n">Mc</span><span class="p">,</span> <span class="n">mbin</span><span class="p">)</span>
+        <span class="n">n_compl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mags</span> <span class="o">&gt;=</span> <span class="n">Mc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mbin_orig</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;Mc&#39;</span><span class="p">:</span> <span class="n">Mc</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimates</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;n_compl&#39;</span><span class="p">:</span> <span class="n">n_compl</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">Mc</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">statseis 0.0.1-alpha documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">statseis.mc_lilliefors</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Russell Azad Khan.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

@@ -2,6 +2,7 @@
 This sub-module contains functions to estimate the mc and b-values of an earthquake catalog, and plot the fmd.
 Many functions require the renaming of earthquake catalog dataframe columns to: ID, MAGNITUDE, DATETIME, LON, LAT, DEPTH.
 """
+
 import datetime as dt
 import math
 import os

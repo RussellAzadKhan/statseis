@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Welcome to statseis’s documentation! &#8212; statseis 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css?v=279e0f84" />
+    <script src="_static/documentation_options.js?v=9e72d6e9"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">statseis 0.0.1-alpha documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to statseis’s documentation!</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="welcome-to-statseis-s-documentation">
+<h1>Welcome to statseis’s documentation!<a class="headerlink" href="#welcome-to-statseis-s-documentation" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="module-statseis">
+<span id="statseis-api-reference"></span><h1>Statseis API Reference<a class="headerlink" href="#module-statseis" title="Link to this heading">¶</a></h1>
+<p id="module-statseis.utils">Utility funcitons</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.add_distance_to_position_haversine">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">add_distance_to_position_haversine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_km_horizontal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_km_vertical</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#add_distance_to_position_haversine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.add_distance_to_position_haversine" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the a point shifted in km by the value of its arguments using the haversine method</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.add_distance_to_position_pyproj">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">add_distance_to_position_pyproj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_km_horizontal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_km_vertical</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#add_distance_to_position_pyproj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.add_distance_to_position_pyproj" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the a point shifted in km by the value of its arguments using the Pyproj module</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.calculate_distance_pyproj_vectorized">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">calculate_distance_pyproj_vectorized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ellipsoid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'WGS84'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#calculate_distance_pyproj_vectorized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.calculate_distance_pyproj_vectorized" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the distance (km) from a point to an array of points using the Pyproj module</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.convert_extent_to_epsg3857">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">convert_extent_to_epsg3857</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#convert_extent_to_epsg3857"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.convert_extent_to_epsg3857" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.datetime_to_decimal_days">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">datetime_to_decimal_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">DATETIMES</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#datetime_to_decimal_days"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.datetime_to_decimal_days" title="Link to this definition">¶</a></dt>
+<dd><p>Durn datetime objects to decimal days</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.datetime_to_decimal_year">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">datetime_to_decimal_year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#datetime_to_decimal_year"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.datetime_to_decimal_year" title="Link to this definition">¶</a></dt>
+<dd><p>Turn datetime objects to decimal years</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.estimate_axis_labels">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">estimate_axis_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#estimate_axis_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.estimate_axis_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Failed attempt to automaticallly generate better axis labels than matplotlib</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.find_event_in_catalog">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">find_event_in_catalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ID</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#find_event_in_catalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.find_event_in_catalog" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.find_nearest">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">find_nearest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#find_nearest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.find_nearest" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the nearest value in an array to its argument.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.get_CDF">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">get_CDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#get_CDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.get_CDF" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.get_bins">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">get_bins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numbers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nearest</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#get_bins"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.get_bins" title="Link to this definition">¶</a></dt>
+<dd><p>Returns optimal bins for plotting a histogram.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.get_catalogue_extent">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">get_catalogue_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">catalogue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#get_catalogue_extent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.get_catalogue_extent" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the min/max of the Lon/Lat of an earthquake catalogue</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.haversine">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">haversine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#haversine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.haversine" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the great circle distance in kilometers between two points
+on the earth (specified in decimal degrees)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.haversine_vectorised">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">haversine_vectorised</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#haversine_vectorised"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.haversine_vectorised" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the distance (km) from a point to an array of points using the haversine method</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.magnitude_to_moment">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">magnitude_to_moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#magnitude_to_moment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.magnitude_to_moment" title="Link to this definition">¶</a></dt>
+<dd><p>Covert moment magnitude to seismic moment</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.min_max_median_mean">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">min_max_median_mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">numbers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#min_max_median_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.min_max_median_mean" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the min, max, median, and mean of a list of numbers</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.no_nans_or_infs">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">no_nans_or_infs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">res_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#no_nans_or_infs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.no_nans_or_infs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.read_in_convert_datetime">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">read_in_convert_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#read_in_convert_datetime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.read_in_convert_datetime" title="Link to this definition">¶</a></dt>
+<dd><p>Read in a CSV of source parameters with datetimes (not strings).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.reformat_catalogue">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">reformat_catalogue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#reformat_catalogue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.reformat_catalogue" title="Link to this definition">¶</a></dt>
+<dd><p>standardise column names, must feed in dataframe with columns: [‘ID’, ‘MAGNITUDE’, ‘DATETIME’, ‘DEPTH’, ‘LON’, ‘LAT’]</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.restrict_catalogue_geographically">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">restrict_catalogue_geographically</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#restrict_catalogue_geographically"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.restrict_catalogue_geographically" title="Link to this definition">¶</a></dt>
+<dd><p>Returns catalogue within LON/LAT region of interest</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.select_within_box">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">select_within_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LON</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LAT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#select_within_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.select_within_box" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.string_to_datetime">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">string_to_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_datetimes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%d</span> <span class="pre">%H:%M:%S'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#string_to_datetime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.string_to_datetime" title="Link to this definition">¶</a></dt>
+<dd><p>Turn datetimes from string into datetime objects</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.string_to_datetime_df">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">string_to_datetime_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%d</span> <span class="pre">%H:%M:%S.%f'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#string_to_datetime_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.string_to_datetime_df" title="Link to this definition">¶</a></dt>
+<dd><p>Find DATETIME column in df and change to datetime objects</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="statseis.utils.string_to_datetime_return">
+<span class="sig-prename descclassname"><span class="pre">statseis.utils.</span></span><span class="sig-name descname"><span class="pre">string_to_datetime_return</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%Y-%m-%d</span> <span class="pre">%H:%M:%S'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/utils.html#string_to_datetime_return"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.utils.string_to_datetime_return" title="Link to this definition">¶</a></dt>
+<dd><p>Find DATETIME column in df and change to datetime objects
+Returns dataframe so function can be mapped</p>
+</dd></dl>
+
+<p id="module-statseis.mc_lilliefors">Routines for performing the Lilliefors test for exponentiality.</p>
+<p>The Lilliefors test is performed as a function of lower magnitude cutoff. The provided
+p-value is eventually used to estimate a Mc-Lilliefors, which complies with the
+exponential Gutenberg–Richter relation to obtain a meaningful b-value.</p>
+<p>The accompanied Jupyter notebook demonstrates the use of the class below.</p>
+<dl class="simple">
+<dt>Associated publication:</dt><dd><dl class="simple">
+<dt>Herrmann, M. and W. Marzocchi (2020). “Inconsistencies and Lurking Pitfalls in the</dt><dd><p>Magnitude–Frequency Distribution of High-Resolution Earthquake Catalogs”.
+Seismological Research Letters 92(2A). doi: 10.1785/0220200337</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">copyright<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2020 Marcus Herrmann, Università degli Studi di Napoli ‘Federico II’</p>
+</dd>
+<dt class="field-even">license<span class="colon">:</span></dt>
+<dd class="field-even"><p>European Union Public Licence (EUPL-1.2-or-later)
+(<a class="reference external" href="https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12">https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12</a>)</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">statseis.mc_lilliefors.</span></span><span class="sig-name descname"><span class="pre">McLilliefors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signif_lev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to perform the Lilliefors test for exponentiality (as function of Mc).</p>
+<p>Note: this class is related and compatible to the FMD class in
+<a class="reference external" href="https://gitlab.seismo.ethz.ch/microEQ/TM/blob/master/TM/analysis.py#L910">https://gitlab.seismo.ethz.ch/microEQ/TM/blob/master/TM/analysis.py#L910</a> ,
+which also supports b-value estimation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.calc_testdistr_mcutoff">
+<span class="sig-name descname"><span class="pre">calc_testdistr_mcutoff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_repeats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.calc_testdistr_mcutoff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.calc_testdistr_mcutoff" title="Link to this definition">¶</a></dt>
+<dd><p>Get test distribution (e.g., <em>p</em>-value) as function of magnitude cutoff.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_repeats</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of random initializations of noise added to mangitudes (which
+make the discrete magnitudes continuous), by default 100.</p></li>
+<li><p><strong>Mstart</strong> (<em>float</em><em>, </em><em>optional</em>) – Overwrite minimum magnitude from where to start, by default starts at
+smallest magnitude present in the set.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to log or not to log, by default <cite>True</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.estimate_Mc_expon_test">
+<span class="sig-name descname"><span class="pre">estimate_Mc_expon_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mbin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.estimate_Mc_expon_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.estimate_Mc_expon_test" title="Link to this definition">¶</a></dt>
+<dd><p>Get the magnitude of completeness using Lilliefors test of exponentiality.</p>
+<dl class="simple">
+<dt>This means: the Mc is determined as the lowest magnitude where the p-value is above</dt><dd><p>the significance level, i.e. where the exponential assumption is not rejected.</p>
+</dd>
+</dl>
+<p>Here we will generally use the average p-value among several realizations of the random
+noise.
+For robustness, this average p-value must exceed the significance level for at least
+0.05 magnitude units, in which case the first exceedance, i.e., the smallest magnitude bin,
+yields the eventual Mc-Lilliefors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mbin</strong> (<em>float</em><em>, </em><em>optional</em>) – Overwrite the “binning”. Defaults to the magnitude binning.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The estimated magnitude of completeness</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.get_test_distribution">
+<span class="sig-name descname"><span class="pre">get_test_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_repeats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.get_test_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.get_test_distribution" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a test several times and return its distribution.</p>
+<p>Every repetition is performed with a newly sampled random noise that is
+added to the magnitudes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.lilliefors_test">
+<span class="sig-name descname"><span class="pre">lilliefors_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.lilliefors_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.lilliefors_test" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a Lilliefors hypothesis test for exponentiality.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mags</strong> (<em>1-D array_like</em><em>, </em><em>optional</em>) – The magnitude set. Defaults to the magnitude set of this FMD object.</p></li>
+<li><p><strong>log</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to output the test results to stdout, by default True.
+Only useful to switch off for batch-processing tests.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>p-value of the hypothesis test.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.plot_testdist_expon_mcutoff">
+<span class="sig-name descname"><span class="pre">plot_testdist_expon_mcutoff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'#000000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legendgroup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asfig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.plot_testdist_expon_mcutoff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.plot_testdist_expon_mcutoff" title="Link to this definition">¶</a></dt>
+<dd><p>Plot test distribution (e.g., <em>p</em>-value) as function of magnitude cutoff.</p>
+<p>Plots the mean, min/max, and +/- std curves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>color</strong> (<em>str</em><em>, </em><em>optional</em>) – The color to use, by default ‘#000000’ (black).</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – The name in the legend entry, by default None.</p></li>
+<li><p><strong>legendgroup</strong> (<em>bool</em><em>, </em><em>int</em><em>, or </em><em>string</em><em>, </em><em>optional</em>) – Whether to group all curves into one group, by default None.
+And if yes, in which (needs to be specified as an integer, i.e. the group id).</p></li>
+<li><p><strong>asfig</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return a plotly Figure instance (<cite>True</cite>), or only a dict (<cite>False</cite>).
+Defaults to <cite>True</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>plotly Figure instance or a dictionary to be converted into a plotly Figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>plotly.graph_objs._figure.Figure or dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="statseis.mc_lilliefors.McLilliefors.update_mags">
+<span class="sig-name descname"><span class="pre">update_mags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/statseis/mc_lilliefors.html#McLilliefors.update_mags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#statseis.mc_lilliefors.McLilliefors.update_mags" title="Link to this definition">¶</a></dt>
+<dd><p>Update the magnitude vector.</p>
+<p>Also recalculates <cite>n_ev</cite> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Welcome to statseis’s documentation!</a></li>
+<li><a class="reference internal" href="#module-statseis">Statseis API Reference</a><ul>
+<li><a class="reference internal" href="#statseis.utils.add_distance_to_position_haversine"><code class="docutils literal notranslate"><span class="pre">add_distance_to_position_haversine()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.add_distance_to_position_pyproj"><code class="docutils literal notranslate"><span class="pre">add_distance_to_position_pyproj()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.calculate_distance_pyproj_vectorized"><code class="docutils literal notranslate"><span class="pre">calculate_distance_pyproj_vectorized()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.convert_extent_to_epsg3857"><code class="docutils literal notranslate"><span class="pre">convert_extent_to_epsg3857()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.datetime_to_decimal_days"><code class="docutils literal notranslate"><span class="pre">datetime_to_decimal_days()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.datetime_to_decimal_year"><code class="docutils literal notranslate"><span class="pre">datetime_to_decimal_year()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.estimate_axis_labels"><code class="docutils literal notranslate"><span class="pre">estimate_axis_labels()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.find_event_in_catalog"><code class="docutils literal notranslate"><span class="pre">find_event_in_catalog()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.find_nearest"><code class="docutils literal notranslate"><span class="pre">find_nearest()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.get_CDF"><code class="docutils literal notranslate"><span class="pre">get_CDF()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.get_bins"><code class="docutils literal notranslate"><span class="pre">get_bins()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.get_catalogue_extent"><code class="docutils literal notranslate"><span class="pre">get_catalogue_extent()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.haversine"><code class="docutils literal notranslate"><span class="pre">haversine()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.haversine_vectorised"><code class="docutils literal notranslate"><span class="pre">haversine_vectorised()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.magnitude_to_moment"><code class="docutils literal notranslate"><span class="pre">magnitude_to_moment()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.min_max_median_mean"><code class="docutils literal notranslate"><span class="pre">min_max_median_mean()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.no_nans_or_infs"><code class="docutils literal notranslate"><span class="pre">no_nans_or_infs()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.read_in_convert_datetime"><code class="docutils literal notranslate"><span class="pre">read_in_convert_datetime()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.reformat_catalogue"><code class="docutils literal notranslate"><span class="pre">reformat_catalogue()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.restrict_catalogue_geographically"><code class="docutils literal notranslate"><span class="pre">restrict_catalogue_geographically()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.select_within_box"><code class="docutils literal notranslate"><span class="pre">select_within_box()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.string_to_datetime"><code class="docutils literal notranslate"><span class="pre">string_to_datetime()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.string_to_datetime_df"><code class="docutils literal notranslate"><span class="pre">string_to_datetime_df()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.utils.string_to_datetime_return"><code class="docutils literal notranslate"><span class="pre">string_to_datetime_return()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors"><code class="docutils literal notranslate"><span class="pre">McLilliefors</span></code></a><ul>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.calc_testdistr_mcutoff"><code class="docutils literal notranslate"><span class="pre">McLilliefors.calc_testdistr_mcutoff()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.estimate_Mc_expon_test"><code class="docutils literal notranslate"><span class="pre">McLilliefors.estimate_Mc_expon_test()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.get_test_distribution"><code class="docutils literal notranslate"><span class="pre">McLilliefors.get_test_distribution()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.lilliefors_test"><code class="docutils literal notranslate"><span class="pre">McLilliefors.lilliefors_test()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.plot_testdist_expon_mcutoff"><code class="docutils literal notranslate"><span class="pre">McLilliefors.plot_testdist_expon_mcutoff()</span></code></a></li>
+<li><a class="reference internal" href="#statseis.mc_lilliefors.McLilliefors.update_mags"><code class="docutils literal notranslate"><span class="pre">McLilliefors.update_mags()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">statseis 0.0.1-alpha documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to statseis’s documentation!</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Russell Azad Khan.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

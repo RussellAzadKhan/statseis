@@ -6,7 +6,6 @@ Many functions require the renaming of earthquake catalog dataframe columns to: 
 ### Notes ###
 # Moved create spatial plot and plot local cat to cartopy maps, may have messed things up
 
-
 import datetime as dt
 import math
 import os

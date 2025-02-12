@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>statseis.utils &#8212; statseis 0.0.1-alpha documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css?v=279e0f84" />
+    <script src="../../_static/documentation_options.js?v=9e72d6e9"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">statseis 0.0.1-alpha documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">statseis.utils</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for statseis.utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utility funcitons</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">asin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyproj</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">Transformer</span>
+<span class="c1"># import mc</span>
+<span class="c1"># import statseis</span>
+
+<span class="n">plot_colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#1b9e77&#39;</span><span class="p">,</span><span class="s1">&#39;#d95f02&#39;</span><span class="p">,</span><span class="s1">&#39;#7570b3&#39;</span><span class="p">,</span><span class="s1">&#39;#e7298a&#39;</span><span class="p">,</span><span class="s1">&#39;#66a61e&#39;</span><span class="p">,</span><span class="s1">&#39;#e6ab02&#39;</span><span class="p">,</span><span class="s1">&#39;#a6761d&#39;</span><span class="p">,</span><span class="s1">&#39;#666666&#39;</span><span class="p">]</span>
+<span class="n">plot_color_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="s1">&#39;teal&#39;</span><span class="p">,</span> <span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="s1">&#39;purple&#39;</span><span class="p">,</span> <span class="s1">&#39;pink&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="s1">&#39;brown&#39;</span><span class="p">,</span> <span class="s1">&#39;grey&#39;</span><span class="p">],</span> <span class="n">plot_colors</span><span class="p">))</span>
+
+<div class="viewcode-block" id="no_nans_or_infs">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.no_nans_or_infs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">no_nans_or_infs</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Metric must be specified for DataFrame input&quot;</span><span class="p">)</span>
+        <span class="n">res_file</span> <span class="o">=</span> <span class="n">res_file</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="o">~</span><span class="n">res_file</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">())</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">res_file</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res_file</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="n">res_file</span> <span class="o">=</span> <span class="n">res_file</span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">res_file</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">res_file</span><span class="p">))]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input must be a Pandas DataFrame, Series, or NumPy array&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">res_file</span></div>
+
+
+<div class="viewcode-block" id="get_CDF">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.get_CDF">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_CDF</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="n">data_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_sorted</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_sorted</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data_sorted</span><span class="p">,</span> <span class="n">cdf</span></div>
+
+
+<div class="viewcode-block" id="convert_extent_to_epsg3857">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.convert_extent_to_epsg3857">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_extent_to_epsg3857</span><span class="p">(</span><span class="n">extent</span><span class="p">):</span>
+    <span class="n">transformer</span> <span class="o">=</span> <span class="n">Transformer</span><span class="o">.</span><span class="n">from_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="s2">&quot;epsg:3857&quot;</span><span class="p">,</span> <span class="n">always_xy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">x_min</span><span class="p">,</span> <span class="n">y_min</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">extent</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">x_max</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">extent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">extent</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="find_event_in_catalog">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.find_event_in_catalog">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_event_in_catalog</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">catalog</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">catalog</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">catalog</span><span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">ID</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="estimate_axis_labels">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.estimate_axis_labels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">estimate_axis_labels</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">n_labels</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Failed attempt to automaticallly generate better axis labels than matplotlib</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">array</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> 
+    <span class="nb">range</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span> <span class="o">-</span> <span class="nb">min</span><span class="p">)</span>
+    <span class="n">str_num</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">range</span><span class="p">)</span>
+    <span class="n">str_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">str_num</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">str_num</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;0&#39;</span><span class="o">*</span><span class="p">(</span><span class="n">str_len</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="nb">min</span><span class="o">/</span><span class="n">step</span><span class="p">)</span><span class="o">*</span><span class="n">step</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">max</span><span class="o">/</span><span class="n">step</span><span class="p">)</span><span class="o">*</span><span class="n">step</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="o">+</span><span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_bins">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.get_bins">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_bins</span><span class="p">(</span><span class="n">numbers</span><span class="p">,</span> <span class="n">nearest</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns optimal bins for plotting a histogram.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span><span class="o">/</span><span class="n">nearest</span><span class="p">)</span><span class="o">*</span><span class="n">nearest</span>
+    <span class="nb">max</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span><span class="o">/</span><span class="n">nearest</span><span class="p">)</span><span class="o">*</span><span class="n">nearest</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">min</span><span class="o">-</span><span class="n">nearest</span><span class="p">,</span> <span class="nb">max</span><span class="o">+</span><span class="p">(</span><span class="n">nearest</span><span class="o">*</span><span class="mi">2</span><span class="p">),</span> <span class="n">nearest</span><span class="p">)</span>    
+    <span class="k">return</span> <span class="n">bins</span></div>
+
+
+
+<div class="viewcode-block" id="magnitude_to_moment">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.magnitude_to_moment">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">magnitude_to_moment</span><span class="p">(</span><span class="n">magnitude</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Covert moment magnitude to seismic moment</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">moment</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">1.5</span><span class="o">*</span><span class="n">magnitude</span><span class="o">+</span><span class="mf">9.05</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">moment</span></div>
+
+
+<div class="viewcode-block" id="string_to_datetime">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.string_to_datetime">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">string_to_datetime</span><span class="p">(</span><span class="n">list_of_datetimes</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turn datetimes from string into datetime objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Datetime</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">list_of_datetimes</span><span class="p">,</span>
+                              <span class="nb">format</span> <span class="o">=</span> <span class="nb">format</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Datetime</span></div>
+
+
+
+<div class="viewcode-block" id="string_to_datetime_df">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.string_to_datetime_df">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">string_to_datetime_df</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find DATETIME column in df and change to datetime objects</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;DATETIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;DATETIME&#39;</span><span class="p">],</span>
+                                           <span class="nb">format</span> <span class="o">=</span> <span class="nb">format</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="string_to_datetime_return">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.string_to_datetime_return">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">string_to_datetime_return</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find DATETIME column in df and change to datetime objects</span>
+<span class="sd">    Returns dataframe so function can be mapped</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;DATETIME&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;DATETIME&#39;</span><span class="p">],</span>
+                                           <span class="nb">format</span> <span class="o">=</span> <span class="nb">format</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataframe</span></div>
+
+
+
+<div class="viewcode-block" id="datetime_to_decimal_days">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.datetime_to_decimal_days">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">datetime_to_decimal_days</span><span class="p">(</span><span class="n">DATETIMES</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Durn datetime objects to decimal days</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">decimal_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">DATETIMES</span> <span class="o">-</span> <span class="n">DATETIMES</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span><span class="o">/</span><span class="p">(</span><span class="mi">24</span><span class="o">*</span><span class="mi">3600</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">decimal_days</span></div>
+
+
+
+<div class="viewcode-block" id="datetime_to_decimal_year">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.datetime_to_decimal_year">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">datetime_to_decimal_year</span><span class="p">(</span><span class="n">timestamps</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turn datetime objects to decimal years</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">decimal_years</span> <span class="o">=</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span><span class="o">/</span><span class="mi">24</span><span class="o">/</span><span class="mi">3600</span><span class="o">/</span><span class="mf">365.25</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decimal_years</span></div>
+
+
+
+<div class="viewcode-block" id="reformat_catalogue">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.reformat_catalogue">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reformat_catalogue</span><span class="p">(</span><span class="n">df</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    standardise column names, must feed in dataframe with columns: [&#39;ID&#39;, &#39;MAGNITUDE&#39;, &#39;DATETIME&#39;, &#39;DEPTH&#39;, &#39;LON&#39;, &#39;LAT&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ID&#39;</span><span class="p">,</span> <span class="s1">&#39;MAGNITUDE&#39;</span><span class="p">,</span> <span class="s1">&#39;DATETIME&#39;</span><span class="p">,</span> <span class="s1">&#39;DEPTH&#39;</span><span class="p">,</span> <span class="s1">&#39;LON&#39;</span><span class="p">,</span> <span class="s1">&#39;LAT&#39;</span><span class="p">]</span> 
+    <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="haversine">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.haversine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">haversine</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the great circle distance in kilometers between two points </span>
+<span class="sd">    on the earth (specified in decimal degrees)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">radians</span><span class="p">,</span> <span class="p">[</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">])</span>
+
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span> 
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span> 
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">dlat</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">dlon</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">asin</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> 
+    <span class="n">r</span> <span class="o">=</span> <span class="mi">6371</span>
+    <span class="k">return</span> <span class="n">c</span> <span class="o">*</span> <span class="n">r</span></div>
+
+
+
+<div class="viewcode-block" id="restrict_catalogue_geographically">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.restrict_catalogue_geographically">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">restrict_catalogue_geographically</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">region</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns catalogue within LON/LAT region of interest</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">LON</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">LON</span> <span class="o">&lt;</span>  <span class="n">region</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span>\
+                <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">LAT</span> <span class="o">&gt;</span> <span class="n">region</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">LAT</span> <span class="o">&lt;</span>  <span class="n">region</span><span class="p">[</span><span class="mi">3</span><span class="p">])]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+
+<div class="viewcode-block" id="get_catalogue_extent">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.get_catalogue_extent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_catalogue_extent</span><span class="p">(</span><span class="n">catalogue</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the min/max of the Lon/Lat of an earthquake catalogue</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">buffer</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">]),</span> <span class="nb">min</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">])])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">extent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">])</span><span class="o">-</span><span class="n">buffer</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">])</span><span class="o">+</span><span class="n">buffer</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">])</span><span class="o">-</span><span class="n">buffer</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">catalogue</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">])</span><span class="o">+</span><span class="n">buffer</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">extent</span> </div>
+
+
+
+<div class="viewcode-block" id="min_max_median_mean">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.min_max_median_mean">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">min_max_median_mean</span><span class="p">(</span><span class="n">numbers</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the min, max, median, and mean of a list of numbers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="nb">min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="nb">max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="n">median</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="n">median</span><span class="p">,</span> <span class="n">mean</span></div>
+
+
+
+<div class="viewcode-block" id="find_nearest">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.find_nearest">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_nearest</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the nearest value in an array to its argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">array</span> <span class="o">-</span> <span class="n">value</span><span class="p">))</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">index</span><span class="o">!=</span><span class="kc">False</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">idx</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="calculate_distance_pyproj_vectorized">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.calculate_distance_pyproj_vectorized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_distance_pyproj_vectorized</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2_array</span><span class="p">,</span> <span class="n">lat2_array</span><span class="p">,</span> <span class="n">ellipsoid</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the distance (km) from a point to an array of points using the Pyproj module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">geod</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Geod</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="n">ellipsoid</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">distance_m</span> <span class="o">=</span> <span class="n">geod</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">lons1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">lon2_array</span><span class="p">,</span> <span class="n">lon1</span><span class="p">),</span> <span class="n">lats1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">lat2_array</span><span class="p">,</span> <span class="n">lat1</span><span class="p">),</span> <span class="n">lons2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lon2_array</span><span class="p">),</span> <span class="n">lats2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat2_array</span><span class="p">))</span>
+    <span class="n">distance_km</span> <span class="o">=</span> <span class="n">distance_m</span> <span class="o">/</span> <span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">distance_km</span></div>
+
+
+
+<div class="viewcode-block" id="haversine_vectorised">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.haversine_vectorised">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">haversine_vectorised</span><span class="p">(</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the distance (km) from a point to an array of points using the haversine method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span> <span class="o">=</span> <span class="n">lon1</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lat1</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lon2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span>
+    <span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="p">[</span><span class="n">lon1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">lon2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">])</span>
+
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span>
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlat</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dlon</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+    <span class="n">km</span> <span class="o">=</span> <span class="mi">6371</span> <span class="o">*</span> <span class="n">c</span> 
+    <span class="k">return</span> <span class="n">km</span></div>
+
+
+
+<div class="viewcode-block" id="add_distance_to_position_haversine">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.add_distance_to_position_haversine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_distance_to_position_haversine</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">distance_km_horizontal</span><span class="p">,</span> <span class="n">distance_km_vertical</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the a point shifted in km by the value of its arguments using the haversine method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">delta_lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">distance_km_horizontal</span> <span class="o">/</span> <span class="n">haversine</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span> <span class="o">*</span> <span class="mi">1</span>
+    <span class="n">delta_lat</span> <span class="o">=</span> <span class="p">(</span><span class="n">distance_km_vertical</span> <span class="o">/</span> <span class="n">haversine</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="mi">1</span>
+    <span class="n">new_lon</span> <span class="o">=</span> <span class="n">lon</span> <span class="o">+</span> <span class="n">delta_lon</span>
+    <span class="n">new_lat</span> <span class="o">=</span> <span class="n">lat</span> <span class="o">+</span> <span class="n">delta_lat</span>
+    <span class="k">return</span> <span class="n">new_lon</span><span class="p">,</span> <span class="n">new_lat</span></div>
+
+
+
+<div class="viewcode-block" id="add_distance_to_position_pyproj">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.add_distance_to_position_pyproj">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_distance_to_position_pyproj</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">distance_km_horizontal</span><span class="p">,</span> <span class="n">distance_km_vertical</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the a point shifted in km by the value of its arguments using the Pyproj module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">geod</span> <span class="o">=</span> <span class="n">pyproj</span><span class="o">.</span><span class="n">Geod</span><span class="p">(</span><span class="n">ellps</span><span class="o">=</span><span class="s2">&quot;WGS84&quot;</span><span class="p">)</span>
+    <span class="n">new_lon_horizontal</span><span class="p">,</span> <span class="n">new_lat_horizontal</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">geod</span><span class="o">.</span><span class="n">fwd</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="n">distance_km_horizontal</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="n">new_lon</span><span class="p">,</span> <span class="n">new_lat</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">geod</span><span class="o">.</span><span class="n">fwd</span><span class="p">(</span><span class="n">new_lon_horizontal</span><span class="p">,</span> <span class="n">new_lat_horizontal</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">distance_km_vertical</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_lon</span><span class="p">,</span> <span class="n">new_lat</span></div>
+
+
+<div class="viewcode-block" id="select_within_box">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.select_within_box">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_within_box</span><span class="p">(</span><span class="n">LON</span><span class="p">,</span> <span class="n">LAT</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="n">min_box_lon</span><span class="p">,</span> <span class="n">min_box_lat</span> <span class="o">=</span> <span class="n">add_distance_to_position_pyproj</span><span class="p">(</span><span class="n">LON</span><span class="p">,</span> <span class="n">LAT</span><span class="p">,</span> <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">max_box_lon</span><span class="p">,</span> <span class="n">max_box_lat</span> <span class="o">=</span> <span class="n">add_distance_to_position_pyproj</span><span class="p">(</span><span class="n">LON</span><span class="p">,</span> <span class="n">LAT</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+
+    <span class="n">selections</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">]</span><span class="o">&gt;=</span> <span class="n">min_box_lon</span><span class="p">)</span> <span class="o">&amp;</span>\
+                        <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">]</span><span class="o">&lt;=</span> <span class="n">max_box_lon</span><span class="p">)</span> <span class="o">&amp;</span>\
+                        <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">]</span><span class="o">&gt;=</span> <span class="n">min_box_lat</span><span class="p">)</span> <span class="o">&amp;</span>\
+                        <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">]</span><span class="o">&lt;=</span> <span class="n">max_box_lat</span><span class="p">)</span>
+                        <span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">selections</span><span class="p">[</span><span class="s1">&#39;DISTANCE_TO_MAINSHOCK&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">calculate_distance_pyproj_vectorized</span><span class="p">(</span><span class="n">LON</span><span class="p">,</span> <span class="n">LAT</span><span class="p">,</span> <span class="n">selections</span><span class="p">[</span><span class="s1">&#39;LON&#39;</span><span class="p">],</span>  <span class="n">selections</span><span class="p">[</span><span class="s1">&#39;LAT&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">selections</span></div>
+
+
+<div class="viewcode-block" id="read_in_convert_datetime">
+<a class="viewcode-back" href="../../statseis.html#statseis.utils.read_in_convert_datetime">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_in_convert_datetime</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read in a CSV of source parameters with datetimes (not strings).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">string_to_datetime_df</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">statseis 0.0.1-alpha documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">statseis.utils</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2025, Russell Azad Khan.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>
