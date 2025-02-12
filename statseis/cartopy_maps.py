@@ -16,7 +16,7 @@ from matplotlib.patches import Rectangle
 from pyproj import Transformer
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import utils
+import statseis.utils as utils
 from matplotlib.patches import Circle
 import statseis
 from pathlib import Path

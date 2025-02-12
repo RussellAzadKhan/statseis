@@ -29,9 +29,9 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import utils
-import mc
-import cartopy_maps as cartmaps
+import statseis.utils as utils
+import statseis.mc as mc
+import statseis.cartopy_maps as cartmaps
 
 date = str(dt.datetime.now().date().strftime("%y%m%d"))
 

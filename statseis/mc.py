@@ -26,9 +26,9 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import utils
-import statseis
-import mc_lilliefors
+import statseis.utils as utils
+import statseis.statseis as statseis
+import statseis.mc_lilliefors as mc_lilliefors
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
 plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
