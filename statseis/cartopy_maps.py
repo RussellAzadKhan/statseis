@@ -22,11 +22,11 @@ import math
 from matplotlib.lines import Line2D
 
 # use if loading the package locally (comment out when uploading release)
-import statseis
-import utils
+# import statseis
+# import utils
 # uncomment when uploading release
-# import statseis.statseis as statseis
-# import statseis.utils as utils
+import statseis.statseis as statseis
+import statseis.utils as utils
 
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']

@@ -32,14 +32,14 @@ from tqdm import tqdm
 from statsmodels.stats.contingency_tables import Table2x2
 
 # use if loading the package locally (comment out when uploading release)
-import utils
-import mc
-import cartopy_maps as cartmaps
+# import utils
+# import mc
+# import cartopy_maps as cartmaps
 
 # uncomment when uploading release
-# import statseis.utils as utils
-# import statseis.mc as mc
-# import statseis.cartopy_maps as cartmaps
+import statseis.utils as utils
+import statseis.mc as mc
+import statseis.cartopy_maps as cartmaps
 
 date = str(dt.datetime.now().date().strftime("%y%m%d"))
 
