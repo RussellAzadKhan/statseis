@@ -1,5 +1,5 @@
 asttokens==3.0.0
-Bottleneck @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_33wnmqdh9g/croot/bottleneck_1731058648266/work
+Bottleneck==1.4.2
 Cartopy==0.24.1
 certifi==2025.1.31
 contourpy==1.3.1
@@ -15,14 +15,15 @@ kiwisolver==1.4.8
 matplotlib==3.10.0
 matplotlib-inline==0.1.7
 narwhals==1.25.2
-numexpr @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_ffj5ghzq2u/croot/numexpr_1730215943719/work
-numpy @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_b7iptlxgej/croot/numpy_and_numpy_base_1708638622773/work/dist/numpy-1.26.4-cp311-cp311-macosx_10_9_x86_64.whl#sha256=ca93246020dd5cf5864c57fea8d3b0afd6530b245222908737c7f434a105fdc2
-packaging @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_15t4xe1fp0/croot/packaging_1734472125760/work
-pandas @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_d6o0iypzho/croot/pandas_1732735102618/work/dist/pandas-2.2.3-cp311-cp311-macosx_10_15_x86_64.whl#sha256=1ae124533ea6f6dd1d1aedc90129c1002a1895eb41a75753bf81669993425922
+numexpr==2.10.1
+numpy==1.26.4
+packaging==24.2
+pandas==2.2.3
 parso==0.8.4
-patsy @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_96zknywdq_/croot/patsy_1738159936109/work
+patsy==1.0.1
 pexpect==4.9.0
 pillow==11.1.0
+pip==25.1
 plotly==6.0.0
 pluggy==1.5.0
 prompt_toolkit==3.0.50
@@ -34,16 +35,18 @@ pyparsing==3.2.1
 pyproj==3.7.0
 pyshp==2.3.1
 pytest==8.3.4
-python-dateutil @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_efk5_uakg8/croot/python-dateutil_1716495742183/work
-pytz @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_244ln7biq9/croot/pytz_1713974320727/work
-scipy @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_06t04e6sdk/croot/scipy_1737122910960/work/dist/scipy-1.15.1-cp311-cp311-macosx_10_15_x86_64.whl#sha256=19b5ff61c7cd2aeaa19bb032ac10f861db51ae994fd41a11ef14f7f8470d2677
+python-dateutil==2.9.0.post0
+pytz==2024.1
+scipy==1.15.1
 seaborn==0.13.2
+setuptools==75.8.0
 shapely==2.0.7
-six @ file:///tmp/build/80754af9/six_1644875935023/work
+six==1.16.0
 stack-data==0.6.3
-statsmodels @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_3cm7j88jdw/croot/statsmodels_1734018881884/work
+statsmodels==0.14.4
 tqdm==4.67.1
 traitlets==5.14.3
 typing_extensions==4.12.2
-tzdata @ file:///croot/python-tzdata_1690578112552/work
+tzdata==2023.3
 wcwidth==0.2.13
+wheel==0.45.1
