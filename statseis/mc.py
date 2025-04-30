@@ -26,9 +26,16 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import statseis.utils as utils
-import statseis.statseis as statseis
-import statseis.mc_lilliefors as mc_lilliefors
+
+# use if loading the package locally (comment out when uploading release)
+import utils
+import statseis
+import mc_lilliefors
+
+# uncomment when uploading release
+# import statseis.utils as utils
+# import statseis.statseis as statseis
+# import statseis.mc_lilliefors as mc_lilliefors
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
 plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
@@ -64,8 +71,7 @@ def b_val_max_likelihood(mag, mc, mbin=0.1):
     a = math.log10(n) + b * mc # 'a-value' for Eq 1
     aki_unc = b / math.sqrt(n) # Uncertainty estimate from Eq 3
     shibolt_unc = 2.3 * b**2 * math.sqrt(sum((mag_above_mc - mbar)**2) / (n * (n-1))) # Uncertainty estimate from Eq 4
-#     return a, b, aki_unc, shibolt_unc # Return b-value and estimates of uncertainty
-    return b
+    return a, b, aki_unc, shibolt_unc # Return b-value and estimates of uncertainty
 
 def Mc_by_maximum_curvature(mag, mbin=0.1, correction=0.2):
     """
@@ -104,8 +110,8 @@ def Mc_by_goodness_of_fit(mag, mbin=0.1):
     for i in range(len(R_to_test)+1): # Loop through and check first cut-off mag within confidence level
         # If no GR distribution fits within confidence levels then use MAXC instead
         if i == (len(R_to_test) + 1):
-            mc = this_maxc
-            print("No fits within confidence levels, using MAXC estimate")
+            mc = np.nan
+            print("No fits within confidence levels")
             break
         else:
             if len(GFT_test[i][0]) > 0:
@@ -155,7 +161,7 @@ def Mc_by_b_value_stability(mag, mbin=0.1, dM = 0.4, min_mc = -3, return_b=False
         bval_stable_points = this_fmd[0][np.array(check_bval_stability)]
         mc = round(min(bval_stable_points[np.where(bval_stable_points > min_mc)[0]]), 1) # Completeness mag is first mag bin that satisfies Eq 6
     else:
-        mc = this_maxc # If no stability point, use MAXC
+        mc = np.nan 
 #     return mc, this_fmd[0], b, b_avg, shibolt_unc
     return mc, b#, this_fmd[0], b, b_avg, shibolt_unc
 
@@ -232,7 +238,7 @@ def get_mbs(mag, mbin, dM = 0.4, min_mc = -3):
         bval_stable_points = this_fmd[0][np.array(check_bval_stability)]
         mc = round(min(bval_stable_points[np.where(bval_stable_points > min_mc)[0]]), 1) # Completeness mag is first mag bin that satisfies Eq 6
     else:
-        mc = this_maxc # If no stability point, use MAXC
+        # mc = this_maxc # If no stability point, use MAXC
         mc = np.nan # my addition
     return mc, this_fmd[0], b, b_avg, shibolt_unc
 print('MBS Funtion Loaded')

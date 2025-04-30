@@ -29,9 +29,17 @@ from matplotlib.patches import Circle
 from collections import namedtuple
 import shutil
 from tqdm import tqdm
-import statseis.utils as utils
-import statseis.mc as mc
-import statseis.cartopy_maps as cartmaps
+from statsmodels.stats.contingency_tables import Table2x2
+
+# use if loading the package locally (comment out when uploading release)
+import utils
+import mc
+import cartopy_maps as cartmaps
+
+# uncomment when uploading release
+# import statseis.utils as utils
+# import statseis.mc as mc
+# import statseis.cartopy_maps as cartmaps
 
 date = str(dt.datetime.now().date().strftime("%y%m%d"))
 
@@ -47,6 +55,7 @@ panel_labels = [letter + ')' for letter in alphabet]
 scale_eq_marker = (lambda x: 10 + np.exp(1.1*x))
 
 def gamma_law_MLE(t):
+    
     """
     Calculate background seismicity rate based on the interevent time distribution. From CORSSA (originally in MATLAB), changed to Python (by me).
     """
@@ -298,12 +307,12 @@ def plot_single_mainshock(ID, mainshock_file, catalogue_name, earthquake_catalog
         local_cat = mc.apply_Mc_cut(local_cat)
     cartmaps.plot_local_cat(mainshock=mainshock, local_cat=local_cat, Mc_cut=Mc_cut, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue)
 
-def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, iterations=10000,
-                              local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=345, Wetzler_cutoff=3):
+def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, catalog_Mc=1.7, iterations=10000,
+                              local_catalogue_radius = 10, foreshock_window = 20, modelling_time_period=345, Type_A_threshold=3):
     """
     Identify foreshocks before mainshocks using the following methods:
         BP - Background Poisson (Trugman and Ross, 2019);
-        G-IET - Gamma inter-event time (van den Ende & Ampuero, 2020);
+        G-IET - Gamma inter-event time (van den Ende & Ampuero, 2020) - modified to not -1 from model counts;
         ESR - Empirical Seismicity Rate (van den Ende & Ampuero, 2020).
         We create code for the BP and ESR methods. We integrate the publically available code for the G-IET method (van den Ende & Ampuero, 2020).
     """
@@ -363,8 +372,12 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
     overall_b_value, foreshock_b_value, regular_b_value = b_values
 
     ### WETZLER WINDOW METHOD ###
-    Wetzler_foreshocks = foreshocks.loc[foreshocks['MAGNITUDE']>Wetzler_cutoff].copy()
+    Wetzler_foreshocks = foreshocks.loc[foreshocks['MAGNITUDE']>=Type_A_threshold].copy()
+    Type_A_at_local_Mc = foreshocks.loc[foreshocks['MAGNITUDE']>=mainshock_Mc].copy()
+    Type_A_at_catalog_Mc = foreshocks.loc[foreshocks['MAGNITUDE']>=catalog_Mc].copy()
     N_Wetzler_foreshocks = len(Wetzler_foreshocks)
+    N_Type_A_at_local_Mc = len(Type_A_at_local_Mc)
+    N_Type_A_at_catalog_Mc = len(Type_A_at_catalog_Mc)
 
     ### MAX RATE /ESR 2.0 METHOD ###
     catalogue_start_date = earthquake_catalogue['DATETIME'].iloc[0]
@@ -427,7 +440,6 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
     else:
         background_rate, TR_expected_events, TR_probability, TR_99CI = [float('nan')]*4
 
-
     if n_regular_seismicity_events > 2:
         t_day = 3600 * 24.0
         t_win = foreshock_window * t_day
@@ -453,11 +465,9 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
                     t_sum = np.cumsum(IET2) # Cumulative sum of event times
                     inds = (t_sum > t_win) # Find the events that lie outside t_win
                 N_inside_t_win = (~inds).sum()
-                if N_inside_t_win == 0: 
-                    N_eq[i] = 0 # No events inside t_win, seismicity rate = 0.
-                else:
-                    N_eq[i] =  N_inside_t_win - 1 # Store the number of events that lie within t_win (excluding shifted event)
+                N_eq[i] =  N_inside_t_win
 
+            print(len(N_eq[N_eq==0]), len(N_eq[N_eq>=0]), len(N_eq))
             try:
                 y_gam_IETs, loc_gam_IETs, mu_gam_IETs = stats.gamma.fit(N_eq[N_eq > 0], floc=0.0)
             except:
@@ -485,7 +495,20 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
         VA_gamma_probability, VA_IETs_probability, VA_gamma_99CI,  VA_IETs_99CI = [float('nan')]*4
 
         ########################################################
-                
+
+    # Assumptions about local catalogs with <10 events
+    if np.isnan(VA_gamma_99CI):
+        VA_gamma_99CI = n_regular_seismicity_events+1
+
+    if np.isnan(TR_99CI):
+        TR_99CI = n_regular_seismicity_events+1
+
+    if n_regular_seismicity_events==0:
+        sliding_window_99CI, VA_gamma_99CI, TR_99CI = [1]*3
+
+    if sliding_window_99CI==0:
+        sliding_window_99CI=1
+
     results_dict = {'ID':mainshock_ID,
                     'MAGNITUDE':mainshock_MAG,
                     'LON':mainshock_LON,
@@ -497,6 +520,8 @@ def identify_foreshocks_short(mainshock, earthquake_catalogue, local_catalogue, 
                     'n_regular_seismicity_events':n_regular_seismicity_events,
                     'n_events_in_foreshock_window':n_events_in_foreshock_window,
                     'n_Wetzler_foreshocks':N_Wetzler_foreshocks,
+                    'n_Type_A_at_local_Mc':N_Type_A_at_local_Mc,
+                    'n_Type_A_at_catalog_Mc':N_Type_A_at_catalog_Mc,
                     'max_20day_rate':max_window,
                     method_dict['Max_window']:max_window_method,
                     method_dict['ESR']:sliding_window_probability,
@@ -597,8 +622,8 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
     # Mc_colour = colour_dict['light blue']
     # rate_colour = colour_dict['dark pink']
 
-    foreshocks_colour = 'red'
-    regular_earthquakes_colour = 'black'
+    foreshocks_colour = plot_color_dict['pink']
+    regular_earthquakes_colour = plot_color_dict['brown']
     mainshock_colour = 'black'
     poisson_colour = plot_color_dict['orange']
     gamma_colour = plot_color_dict['teal']
@@ -634,10 +659,10 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
     axs[time_series_plot].set_title(f"ID: {mainshock_ID} - {mainshock.DATETIME.strftime('%b %d %Y')} - {catalogue_name}", loc='right')
 
     axs[time_series_plot].scatter(0, mainshock.MAGNITUDE, s= event_marker_size(mainshock.MAGNITUDE), #s=400, 
-                                  ec=mainshock_colour, fc='grey', alpha=0.5,
+                                  ec=mainshock_colour, fc='grey', alpha=0.95,
                                     label=r'$M_{w}$ ' + str(mainshock.MAGNITUDE) + ' Mainshock',  
                                     zorder=1)
-    axs[time_series_plot].axvline(x=20, color='red', linestyle='--', linewidth=linewidth,
+    axs[time_series_plot].axvline(x=20, color=foreshocks_colour, linestyle='--', linewidth=linewidth,
                                     label = f"20-day foreshock window",
                                     zorder=4)
     axs[time_series_plot].set_xlabel('Days to mainshock', fontsize=20)
@@ -645,15 +670,16 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
     axs[time_series_plot].set_xlim(-25,365+20)
     # axs[time_series_plot].set_ylim(axs[time_series_plot].get_extent(),365+20)
     current_ylim = axs[time_series_plot].get_ylim()
+    axs[time_series_plot].set_ylim(current_ylim[0], current_ylim[1]+0.5)
     # axs[time_series_plot].set_ylim(current_ylim[0], current_ylim[1]+0.5)
     axs[time_series_plot].invert_xaxis()
 
     if len(modelling_events) >0:
         # ax.set_yticks(np.arange(math.floor(min(local_cat['MAGNITUDE'])), math.ceil(mainshock.MAGNITUDE), 1))
         axs[time_series_plot].scatter(modelling_events['DAYS_TO_MAINSHOCK'], modelling_events['MAGNITUDE'],
-                   s=event_marker_size(modelling_events['MAGNITUDE']), vmin=vmin, vmax=vmax, 
-                                        label= f'{len(modelling_events)- len(foreshocks)} modelling events',
-                                        c=modelling_events['DAYS_TO_MAINSHOCK'], alpha=0.5,  zorder=1)
+                   s=event_marker_size(modelling_events['MAGNITUDE']), label= f'{len(modelling_events)- len(foreshocks)} modelling events',  alpha=0.5,  zorder=1,
+                                        color=regular_earthquakes_colour# vmin=vmin, vmax=vmax, c=modelling_events['DAYS_TO_MAINSHOCK'],
+                                        )
         # axs[time_series_plot].scatter(local_catalogue_below_Mc['DAYS_TO_MAINSHOCK'], local_catalogue_below_Mc['MAGNITUDE'], 
         #                             label= str(len(local_catalogue_below_Mc)) + ' Earthquakes below Mc', 
         #               
@@ -661,7 +687,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
     if len(foreshocks) > 0:
         axs[time_series_plot].scatter(foreshocks['DAYS_TO_MAINSHOCK'], foreshocks['MAGNITUDE'],
                     s=event_marker_size(foreshocks['MAGNITUDE']),
-                   label= fr"$N_obs$: {len(foreshocks)}", color='red', alpha=0.5, zorder=5)
+                   label= fr"$N_obs$: {len(foreshocks)}", color=foreshocks_colour, alpha=0.5, zorder=5)
         
     if len(aftershocks) > 0:
         axs[time_series_plot].scatter(aftershocks['DAYS_TO_MAINSHOCK'], aftershocks['MAGNITUDE'], 
@@ -690,7 +716,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
             #  c=sliding_window_points_full.astype(int),
              color='black', alpha=rate_alpha,
              label='Count')
-    ax2.axhline(y=len(foreshocks), color='red', alpha=0.5, label = r'$N_{obs}$', zorder=100, linewidth=linewidth,)
+    ax2.axhline(y=len(foreshocks), color=foreshocks_colour, alpha=0.5, label = r'$N_{obs}$', zorder=100, linewidth=linewidth,)
     ax2.set_ylabel('20-day Count')
     # ax.set_zorder(ax2.get_zorder()+1)
     axs[time_series_plot].patch.set_visible(False)
@@ -754,7 +780,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
         #                                 zorder=2)
         axs[foreshock_window_plot].scatter(foreshocks['DAYS_TO_MAINSHOCK'], foreshocks['MAGNITUDE'],
                                            s=event_marker_size(foreshocks['MAGNITUDE']),
-                                           label=r'$N_{obs}$: ' + str(len(foreshocks)), color='red', alpha=0.5, zorder=5)
+                                           label=r'$N_{obs}$: ' + str(len(foreshocks)), color=foreshocks_colour, alpha=0.5, zorder=5)
         # axs[foreshock_window_plot].scatter(foreshocks['DAYS_TO_MAINSHOCK'], foreshocks['MAGNITUDE'], color=foreshocks_colour, alpha=0.5,
         #                                     label=r'$N_{obs}$: ' + str(n_events_in_foreshock_window))
         # axs[foreshock_window_plot].scatter(foreshocks_below_Mc['DAYS_TO_MAINSHOCK'], foreshocks_below_Mc['MAGNITUDE'], 
@@ -774,7 +800,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
 
     axs[foreshock_window_plot].set_title(panel_labels[foreshock_window_plot], fontsize=20, loc='left')
     # axs[foreshock_window_plot].scatter(1E-10, mainshock.MAGNITUDE, marker='*', s=400, color=mainshock_colour, zorder=2)
-    axs[foreshock_window_plot].axvline(x=foreshock_window, color='red', linestyle='--', linewidth=linewidth,)
+    axs[foreshock_window_plot].axvline(x=foreshock_window, color=foreshocks_colour, linestyle='--', linewidth=linewidth,)
 
     axs[foreshock_window_plot].set_xlabel('Days to mainshock')
     axs[foreshock_window_plot].set_ylabel('Magnitude')
@@ -798,7 +824,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
     axs[model_plot].set_xlabel('20-day Count', fontsize=20)
     axs[model_plot].set_ylabel('PDF', fontsize=20)
     axs[model_plot].axvline(x=n_events_in_foreshock_window, color=foreshocks_colour, label=r'$N_{obs}$: ' + str(n_events_in_foreshock_window), linewidth=linewidth)      
-    axs[CDF_plot].axvline(x=n_events_in_foreshock_window, color='red', linewidth=linewidth,
+    axs[CDF_plot].axvline(x=n_events_in_foreshock_window, color=foreshocks_colour, linewidth=linewidth,
                             label=r'$N_{obs}$: ' + str(n_events_in_foreshock_window))
     # axs[model_plot].set_xticks(range(0,20,2))
 
@@ -887,7 +913,7 @@ def plot_models(mainshock, results_dict, file_dict, catalogue_name, Mc_cut, fore
             plt.savefig(f"../outputs/{catalogue_name}/Mc_cut/model_plots/{mainshock.ID}.png")
     plt.show()
 
-def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc_cut, save, save_name='default_params'):
+def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, catalog_Mc, Mc_cut, save, save_name='default_params'):
     date = str(dt.datetime.now().date().strftime("%y%m%d"))
 
     results_list = []
@@ -906,7 +932,7 @@ def process_mainshocks(mainshocks_file, earthquake_catalogue, catalogue_name, Mc
             local_cat = local_cat.loc[local_cat['MAGNITUDE']>=mainshock.Mc].copy()
         # create_spatial_plot(mainshock=mainshock, local_cat=local_cat, Mc_cut=Mc_cut, catalogue_name=catalogue_name, save=save)
         cartmaps.plot_local_cat(mainshock=mainshock, local_cat=local_cat, earthquake_catalogue=earthquake_catalogue, catalogue_name=catalogue_name, Mc_cut=Mc_cut)
-        results_dict, file_dict = identify_foreshocks_short(local_catalogue=local_cat, mainshock=mainshock, earthquake_catalogue=earthquake_catalogue)
+        results_dict, file_dict = identify_foreshocks_short(local_catalogue=local_cat, mainshock=mainshock, earthquake_catalogue=earthquake_catalogue, catalog_Mc=catalog_Mc)
         plot_models(mainshock=mainshock, results_dict=results_dict, file_dict=file_dict, Mc_cut=Mc_cut, catalogue_name=catalogue_name, save=save)
         results_list.append(results_dict)
         clear_output(wait=True)
@@ -1076,3 +1102,22 @@ def foreshock_rate(df):
     n_foreshocks = len(df.loc[df['ESR']<0.01])
     n_total = len(df)
     return n_foreshocks/n_total, n_foreshocks, n_total
+
+def odds_ratio(df, condition_1, condition_2, foreshocks='foreshocks', alpha=0.01):
+    """Create a 2x2 contingency table"""
+
+    df_subgroup = df.query(condition_1)
+
+    df_all_except_subgroup = df.query(condition_2)
+    
+    N1_f = df_subgroup[foreshocks].sum()
+    N2_f = df_all_except_subgroup[foreshocks].sum()
+    data = np.array([[N1_f, len(df_subgroup)-N1_f],
+                     [N2_f, len(df_all_except_subgroup) - N2_f]])
+    
+    table = Table2x2(data)
+    odds_ratio = table.oddsratio
+    ci_lower, ci_upper = table.oddsratio_confint(alpha=alpha)
+    level = int((1-alpha)*100)
+    print(f"{odds_ratio:.2f} ({level}CI: {ci_lower:.2f}, {ci_upper:.2f})")
+    return odds_ratio, ci_lower, ci_upper, level

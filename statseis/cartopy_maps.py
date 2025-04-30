@@ -16,12 +16,18 @@ from matplotlib.patches import Rectangle
 from pyproj import Transformer
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import statseis.utils as utils
 from matplotlib.patches import Circle
-import statseis
 from pathlib import Path
 import math
 from matplotlib.lines import Line2D
+
+# use if loading the package locally (comment out when uploading release)
+import statseis
+import utils
+# uncomment when uploading release
+# import statseis.statseis as statseis
+# import statseis.utils as utils
+
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
 plot_color_dict = dict(zip(['teal', 'orange', 'purple', 'pink', 'green', 'yellow', 'brown', 'grey'], plot_colors))
@@ -142,10 +148,8 @@ def create_spatial_plot(mainshock, local_cat, catalogue_name, Mc_cut, min_days=3
             plt.savefig(f"../outputs/{catalogue_name}/Mc_cut/spatial_plots/{mainshock_ID}_{radius_km}km_{min_days}_to_{max_days}.png")
     plt.show()
 
-def plot_local_cat(mainshock, local_cat, earthquake_catalogue, catalogue_name, Mc_cut, min_days=365, max_days=0, radius_km=10, save=True, 
-                   box_halfwidth_km=30, aftershock_days=-20, foreshock_days=20, stations=None):
-    
-    event_marker_size = (lambda x: 50+10**(x/1.25))
+def plot_local_cat(mainshock, earthquake_catalogue, catalogue_name, Mc_cut, local_cat=None, min_days=365, max_days=0, radius_km=10, save=True, 
+                   box_halfwidth_km=30, aftershock_days=-20, foreshock_days=20, stations=None, event_marker_size = (lambda x: 50+10**(x/1.25))):
 
     mainshock_ID = mainshock.ID
     mainshock_M = mainshock.MAGNITUDE
@@ -153,7 +157,8 @@ def plot_local_cat(mainshock, local_cat, earthquake_catalogue, catalogue_name, M
     mainshock_LAT = mainshock.LAT
     mainshock_DATETIME = mainshock.DATETIME
 
-    local_cat = statseis.create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
+    if local_cat is None:
+        local_cat = statseis.create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
 
     min_box_lon, min_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, -box_halfwidth_km, -box_halfwidth_km)
     max_box_lon, max_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, box_halfwidth_km, box_halfwidth_km)

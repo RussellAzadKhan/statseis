@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import statsmodels.api as sm
 
 @pytest.fixture
 def sample_numbers():
@@ -8,7 +7,7 @@ def sample_numbers():
 
 from statseis.statseis import gamma_law_MLE
 
-print(gamma_law_MLE([0.1,0.2,0.3]))
+# print(gamma_law_MLE([0.1,0.2,0.3]))
 
 def test_gamma_law_MLE(sample_numbers):
     assert gamma_law_MLE(sample_numbers) == 9.998000000000001

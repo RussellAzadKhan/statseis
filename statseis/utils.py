@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import pyproj
 from pyproj import Transformer
+import re
+import matplotlib.pyplot as plt
+import string
 # import mc
 # import statseis
 
@@ -248,3 +251,34 @@ def read_in_convert_datetime(path):
     df = pd.read_csv(path)
     string_to_datetime_df(df, format='%Y-%m-%d %H:%M:%S.%f')
     return df
+
+def convert_sci_to_int_if_shorter(text):
+    """Convert scientific notation in a string to integer format if it shortens the length."""
+    def replace_sci(match):
+        sci_number = match.group(0)  # The original scientific notation string
+        int_number = str(int(float(sci_number)))  # Convert to integer string
+        return int_number if len(int_number) <= len(sci_number) else sci_number
+    return re.sub(r'(\d+\.\d+)e\+?(\d+)', replace_sci, text)
+
+def plot_time_series(x, y, xlabel=None, ylabel=None, ax=None, ec='white', linewidth=0.5, s=100, fc='gray', alpha=0.5, subplot=False):
+    if (subplot==False) | (ax==None):
+        fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(x, y, ec=ec, linewidth=linewidth, s=s, fc=fc, alpha=alpha)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+def add_panel_labels(fig, fontsize=20, loc='left') -> None:
+    """
+    Add panel labels to each subplot in a figure.
+
+    Parameters:
+    - fontsize: Font size for the panel labels (optional).
+    - loc: Location of the panel labels (optional).
+
+    Returns:
+    - None
+    """
+    alphabet = string.ascii_lowercase
+    panel_labels = [letter + ')' for letter in alphabet]
+    for i, ax in enumerate(fig.axes):
+        ax.set_title(panel_labels[i], fontsize=fontsize, loc=loc)

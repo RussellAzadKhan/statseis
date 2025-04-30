@@ -23,7 +23,8 @@ dependencies = [
   "tqdm",
   "geopandas",
   "shapely",
-  "plotly"
+  "plotly",
+  "statsmodels"
 ]
 
 classifiers = [
