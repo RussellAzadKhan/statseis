@@ -35,9 +35,3 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/RussellAzadKhan/seispy"
-
-[tool.pytest.ini_options]
-pythonpath = "."
-addopts = [
-    "--import-mode=importlib",
-]
