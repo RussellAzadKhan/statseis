@@ -25,7 +25,7 @@ from matplotlib.lines import Line2D
 # import statseis
 # import utils
 # uncomment when uploading release
-import statseis.statseis as statseis
+import statseis.foreshocks as foreshocks
 import statseis.utils as utils
 
 
@@ -158,7 +158,7 @@ def plot_local_cat(mainshock, earthquake_catalogue, catalogue_name, Mc_cut, loca
     mainshock_DATETIME = mainshock.DATETIME
 
     if local_cat is None:
-        local_cat = statseis.create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
+        local_cat = foreshocks.create_local_catalogue(mainshock, catalogue_name=catalogue_name, earthquake_catalogue=earthquake_catalogue, radius_km=box_halfwidth_km, box=True)
 
     min_box_lon, min_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, -box_halfwidth_km, -box_halfwidth_km)
     max_box_lon, max_box_lat = utils.add_distance_to_position_pyproj(mainshock_LON, mainshock_LAT, box_halfwidth_km, box_halfwidth_km)

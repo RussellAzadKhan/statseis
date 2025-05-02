@@ -34,7 +34,7 @@ from tqdm import tqdm
 
 # uncomment when uploading release
 import statseis.utils as utils
-import statseis.statseis as statseis
+import statseis.foreshocks as foreshocks
 import statseis.mc_lilliefors as mc_lilliefors
 
 plot_colors = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666']
@@ -260,11 +260,11 @@ def get_Mcs_400(mainshocks_file, earthquake_catalogue, catalogue_name, start_rad
         # print(f"{catalogue_name}")
         # print(f"{i} of {len(mainshocks_file)} mainshocks")
         radius = start_radius
-        local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+        local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
         while len(local_cat)<min_n:
             if radius <max_r:
                 radius+=inc
-                local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+                local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
             elif radius>=max_r:
                 break
         try:
@@ -331,11 +331,11 @@ def get_Mcs_ensemble(mainshocks_file, earthquake_catalogue, catalogue_name,
         # print(f"{catalogue_name}")
         # print(f"{i} of {len(mainshocks_file)} mainshocks")
         radius = start_radius
-        local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+        local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
         while len(local_cat)<min_n:
             if radius <max_r:
                 radius+=inc
-                local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+                local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
             elif radius>=max_r:
                 break
         if Lilliefors==True:
@@ -384,7 +384,7 @@ def get_Mc_expanding_r(mainshocks_file, earthquake_catalogue, catalogue_name, st
             if radius==0:
                 radius+=1
 
-            local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
+            local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue, catalogue_name=catalogue_name, save=False, radius_km=radius)
             # print(radius, len(local_cat))
             try:
                 Mbass_mc = get_mbs(np.array(local_cat['MAGNITUDE']), mbin=0.1)[0]
@@ -452,8 +452,8 @@ def plot_fmd(local_cat, save_path=None, ID=np.nan, radius=50):
 def plot_FMD_mainshock_subset(mshock_file, name, outfile_name, catalog, stations=None):
     Path(f'../outputs/{outfile_name}/FMD').mkdir(parents=True, exist_ok=True)
     for mainshock in tqdm(mshock_file.itertuples(), total=len(mshock_file)):
-        local_cat = statseis.create_local_catalogue(mainshock, earthquake_catalogue=catalog, catalogue_name=name, radius_km=100)
-        statseis.plot_local_cat(mainshock=mainshock, local_cat=local_cat, catalogue_name=name, Mc_cut=False, stations=stations, earthquake_catalogue=catalog,
+        local_cat = foreshocks.create_local_catalogue(mainshock, earthquake_catalogue=catalog, catalogue_name=name, radius_km=100)
+        foreshocks.plot_local_cat(mainshock=mainshock, local_cat=local_cat, catalogue_name=name, Mc_cut=False, stations=stations, earthquake_catalogue=catalog,
                     min_days=math.ceil(local_cat['DAYS_TO_MAINSHOCK'].max()), max_days=0,
                     radius_km=mainshock.radii_50, box_halfwidth_km=100, aftershock_days=math.floor(local_cat['DAYS_TO_MAINSHOCK'].min()))
         print(mainshock.n_for_Mc_50)
