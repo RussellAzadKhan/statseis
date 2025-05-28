@@ -267,7 +267,7 @@ def plot_time_series(x, y, xlabel=None, ylabel=None, ax=None, ec='white', linewi
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-def add_panel_labels(fig, fontsize=20, loc='left') -> None:
+def add_panel_labels(fig, fontsize=20, loc='left', skip=0) -> None:
     """
     Add panel labels to each subplot in a figure.
 
@@ -280,5 +280,12 @@ def add_panel_labels(fig, fontsize=20, loc='left') -> None:
     """
     alphabet = string.ascii_lowercase
     panel_labels = [letter + ')' for letter in alphabet]
+    if skip > 0:
+        panel_labels = panel_labels[skip:]
     for i, ax in enumerate(fig.axes):
         ax.set_title(panel_labels[i], fontsize=fontsize, loc=loc)
+
+def foreshock_rate(df):
+    n_foreshocks = len(df.loc[df['ESR']<0.01])
+    n_total = len(df)
+    return n_foreshocks/n_total, n_foreshocks, n_total
