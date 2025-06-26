@@ -1098,8 +1098,8 @@ def run_ESR_for_mainshock_file(mainshock_file, earthquake_catalog, input_name, m
     ESR_results.to_csv(f'../p2_outputs/ESR_results/{save_name}', index=False)
     return ESR_results
 
-def foreshock_rate(df):
-    n_foreshocks = len(df.loc[df['ESR']<0.01])
+def foreshock_rate(df, percentile=0.01):
+    n_foreshocks = len(df.loc[df['ESR']<percentile])
     n_total = len(df)
     return n_foreshocks/n_total, n_foreshocks, n_total
 
