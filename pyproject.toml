@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "statseis"
 version = "0.0.1"
 authors = [
-  { name="Russell Azad Khan", email="russellazadkhan@gmail.com" },
+  { name="RussellAzadKhan", email="russellazadkhan@gmail.com" },
 ]
 description = "Package to statistically analyse seismicity"
 readme = "README.md"
