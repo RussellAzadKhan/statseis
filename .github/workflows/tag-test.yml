@@ -1,0 +1,12 @@
+name: Minimal Tag Trigger Test
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Tag workflow triggered!"
