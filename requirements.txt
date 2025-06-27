@@ -37,7 +37,7 @@ pyshp==2.3.1
 pytest==8.3.4
 python-dateutil==2.9.0.post0
 pytz==2024.1
-scipy==1.15.1
+scipy<1.16 # https://github.com/statsmodels/statsmodels/issues/9584
 seaborn==0.13.2
 setuptools==78.1.1
 shapely==2.0.7
